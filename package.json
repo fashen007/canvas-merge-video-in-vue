@@ -5,12 +5,15 @@
   "author": "yonghuang <646028751@qq.com>",
   "private": true,
   "scripts": {
-    "dev": "node build/dev-server.js",
+    "dev": "nodemon build/dev-server.js",
     "build": "node build/build.js"
   },
   "dependencies": {
+    "eslint": "^3.15.0",
+    "eslint-friendly-formatter": "^2.0.7",
     "fluent-ffmpeg": "^2.1.0",
     "recordrtc": "^5.4.1",
+    "screenshot": "^0.1.0",
     "vue": "^2.1.10",
     "vue-router": "^2.2.0"
   },

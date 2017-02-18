@@ -1,74 +1,71 @@
 <template>
   <div class="hello">
     <h1>{{ msg }}</h1>
-    <video id="video" controls width="270" autoplay>
-      <source src="" type='video/mp4'>
-      <source src="http://www.w3school.com.cn/example/html5/mov_bbb.ogg" type='video/ogg'>
-      <source src="http://www.w3school.com.cn/example/html5/mov_bbb.webm" type='video/webm'>
-    </video>
-    <canvas controls id="myCanvas" width="270" height="135" style="border:1px solid #d3d3d3;">Your browser does not support the HTML5 canvas tag.</canvas>
+    <template v-for='(list, i) in playList' v-if='list.load'>
+      <video id="video" controls width="270" autoplay>
+        <source :src="list.src" type='video/mp4' key='i'>
+      </video>
+    </template>
+    <div class='video-cont'>
+      <canvas controls id="myCanvas" width="270" height="135" style="border:1px solid #d3d3d3;">Your browser does not support the HTML5 canvas tag.</canvas>
+      <div class='controls'>
+        设置
+      </div>
+    </div>
+   
 </div>
   </div>
 </template>
 <script>
-import RecordRTC from 'recordrtc'
 export default {
   name: 'hello',
   data () {
     return {
       msg: '视屏合并demo',
-      playList: ['http://www.w3school.com.cn/example/html5/mov_bbb.mp4', 'http://bbs.xiaomi.cn/t-12455708', 'http://bbs.xiaomi.cn/t-11546960', 'http://bbs.xiaomi.cn/t-11543997', 'http://bbs.xiaomi.cn/t-11542643', 'http://bbs.xiaomi.cn/t-12648405']
+      allLength: 72,
+      playList: [{
+        src: 'http://www.w3school.com.cn/example/html5/mov_bbb.mp4',
+        duration: 10,
+        load: true
+      }, {
+        src: 'https://www.w3schools.com/html/movie.mp4',
+        duration: 12,
+        load: false 
+      }, {
+        src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4',
+        duration: 60,
+        load: false
+      }]
     }
   },
   mounted() {
     const that = this
-    var recordRTC = RecordRTC(that.playList, {
-      type: 'video',
-      mimeType: 'video/webm', // or video/webm\;codecs=h264 or video/webm\;codecs=vp9
-      previewStream: function(stream) {
-        console.log(1111)
-        // it is optional
-        // it allows you preview the recording video
-      }
-    });
-    recordRTC.startRecording();
-    recordRTC.stopRecording(function(singleWebM) {
-        video.src = singleWebM;
+    var v = document.getElementById('video');
+    var c = document.getElementById('myCanvas');
+    var ctx = c.getContext('2d');
+    let timer = null
+    console.log(v)
+    if (v) {
+       // 播放
+      v.addEventListener('play', function() {
+          timer = window.setInterval(function() {
+              ctx.drawImage(v, 0, 0, 270, 135);
+          }, 20);  // 每0.02秒画一张图片
+      }, false);
 
-        var recordedBlob = recordRTC.getBlob();
-        recordRTC.getDataURL(function(dataURL) {
-          console.log('dataURL', dataURL)
-        });
-    });
-    // 视屏地址
-    // const that = this
-    // ffmpeg(that.playList[0]).input(that.playList[1])
-    // .input(that.playList[2])
-    // .on('error', function(err) {
-    //   console.log('An error occurred: ' + err.message);
-    // })
-    // .on('end', function() {
-    //   console.log('Merging finished !');
-    // })
-    // .mergeToFile('merge.mp4', '/tmp/');
-    // var canvas = document.getElementById('myCanvas');
-    // var ctx = canvas.getContext('2d');
-    // var video = document.getElementById('video');
-    //
-    // // set canvas size = video size when known
-    // video.addEventListener('loadedmetadata', function() {
-    //   canvas.width = video.videoWidth;
-    //   canvas.height = video.videoHeight;
-    // });
-    // video.addEventListener('play', function() {
-    //   var $this = this; //cache
-    //   (function loop() {
-    //     if (!$this.paused && !$this.ended) {
-    //       ctx.drawImage($this, 0, 0);
-    //       setTimeout(loop, 1000 / 30); // drawing at 30fps
-    //     }
-    //   })();
-    // }, 0);
+      // 暂停
+      v.addEventListener('pause', function() {
+          window.clearInterval(timer);  // 暂停绘画
+      }, false);
+
+      // 结束
+      v.addEventListener('ended', function() {
+        clearInterval(timer);
+      }, false)
+    }
+    // $video1.attr("src", "http://www.w3school.com.cn/example/html5/mov_bbb.mp4");
+    // $video2.attr("src", "https://www.w3schools.com/html/movie.mp4");
+    // $video3.attr("src", "http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4");
   }
 }
 </script>
@@ -91,5 +88,9 @@ li {
 
 a {
   color: #42b983;
+}
+.video-cont{
+  width: 270px;
+  height: 135px;
 }
 </style>

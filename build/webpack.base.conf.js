@@ -5,7 +5,6 @@ var vueLoaderConfig = require('./vue-loader.conf')
 function resolve (dir) {
   return path.join(__dirname, '..', dir)
 }
-var ffmpeg = require('fluent-ffmpeg');
 module.exports = {
   target: 'web',
   entry: {
@@ -26,7 +25,6 @@ module.exports = {
     ],
     alias: {
       'vue$': 'vue/dist/vue.common.js',
-      'ffmpeg': ffmpeg,
       'src': resolve('src'),
       'assets': resolve('src/assets'),
       'components': resolve('src/components')
