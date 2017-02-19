@@ -10,7 +10,7 @@
       <div class='controls'>
           <el-row :gutter="5" class='row'>
             <el-col :span="3"><div class="grid-content bg-purple"></div><el-button size="mini" @click.native='triggerPlay'>{{pauseing ? '开始': '暂停'}}</el-button></el-col>
-            <el-col :span="7" class='time-duration'><div class="grid-content bg-purple">{{currentTime}}/{{lastTime}}</div></el-col>
+            <el-col :span="7" class='time-duration'><div class="grid-content bg-purple">{{currentTime}}/{{terminalTime}}</div></el-col>
             <el-col :span="10"><div class="grid-content bg-purple"><el-slider @change='progressDrag' v-model="progress" :max='allLength'></el-slider></div></el-col>
           </el-row>
       </div>
@@ -25,24 +25,23 @@ export default {
   name: 'hello',
   data () {
     return {
-      msg: '视屏合并demo',
-      progress: 0,
-      progressAutoAdd: true,
-      loading: true,
-      pauseing: true,
-      playing: false,
-      sounds: 10,
-      allLength: 82,
-      currentTime: '0:00',
-      currentIndex: 0,
-      lastTime: '',
-      videoInstance: null,
-      canvasInstance: null,
-      playList: [{
+      progress: 0, // 视频合并之后的时间条
+      progressAutoAdd: true, // 表示是否是自己播放的还是拖拽后播放的
+      loading: false, // 表示是否需要显示loading状态
+      pauseing: true, // 暂停状态
+      playing: false, // 播放状态
+      sounds: 10, // 声音控制,暂时还没实现
+      allLength: 82, // 总长度.这个是需要后端返回的
+      currentTime: '0:00', // 默认播放时间
+      currentIndex: 0, // 默认当前播放碎片指引
+      terminalTime: '', // 终点
+      videoInstance: null, // 当前激活的视频实例
+      canvasInstance: null, // canvas 实例
+      playList: [{ // 碎片资源列表  这个是需要后端返回的
         src: 'http://www.w3school.com.cn/example/html5/mov_bbb.mp4',
-        duration: 10,
-        position: 1,
-        load: true
+        duration: 10, // 长度
+        position: 0, // 节点
+        load: false // 是否加载过  但是不一定是加载完成了
       }, {
         src: 'https://www.w3schools.com/html/movie.mp4',
         duration: 12,
@@ -59,21 +58,18 @@ export default {
   mounted() {
     let c = document.getElementById('myCanvas')
     this.canvasInstance = c.getContext('2d')
-    this.lastTime = this.durationFormat(this.allLength)
+    this.terminalTime = this.durationFormat(this.allLength) // 格式化所有视频长度
     this.init()
-    // $video1.attr("src", "http://www.w3sch)ool.com.cn/example/html5/mov_bbb.mp4");
-    // $video2.attr("src", "https://www.w3schools.com/html/movie.mp4");
-    // $video3.attr("src", "http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4");
   },
   watch: {
+    // 检控时间条
     progress: function(newVal, oldVal) {
       let diff = Number(Math.abs(newVal - oldVal)).toFixed(2)
       if(diff > 1) { // 表示是拖拽的 不是自然累加的
-        console.log('应该显')
         this.progressAutoAdd = false
-        console.log('this.progressAutoAdd', this.progressAutoAdd)
       }
     },
+    // loading成功之后 触发一次播放
     loading: function(newVal, oldVal) {
       if (!newVal && newVal != oldVal) {
         this.triggerPlay()
@@ -86,7 +82,8 @@ export default {
       that.videoInstance = document.querySelectorAll('video')[this.currentIndex];
       this.drawTimerInterval = null
       this.currentTimeInterval = null
-      let videoPlay = () => {
+      // 视频play监听回调
+      let videoPlayHandle = () => {
         window.clearInterval(this.currentTimeInterval)
         this.playing = true
         this.pauseing = false
@@ -97,17 +94,19 @@ export default {
         this.currentTimeInterval = window.setInterval(() => {
           // console.log(this.videoInstance.buffered)
           that.progressAutoAdd = true
-          that.progress = that.progress + 1 // 播放条累计
+          that.progress = that.progress < this.allLength ? that.progress + 1 : this.allLength // 播放条累计
           that.currentTime = that.durationFormat(that.progress)
         }, 1000);  // 一秒钟更新一次
       }
-      let videoPause = () => {
+      // 视频pause监听回调
+      let videoPauseHandle = () => {
           this.playing = false
           this.pauseing = true
           clearInterval(this.drawTimerInterval);  // 暂停绘画
           clearInterval(this.currentTimeInterval);  // 暂停计时
       }
-      let videoEnded = () => {
+      // 视频ended监听回调
+      let videoEndedHandle = () => {
         if (this.currentIndex < this.playList.length-1) {
           this.currentIndex++
           this.$nextTick(()=> {
@@ -118,39 +117,42 @@ export default {
           this.playing = false
           this.pauseing = true
         }
+        // 清除绘制计时器
         clearInterval(this.drawTimerInterval);  // 暂停绘画
         clearInterval(this.currentTimeInterval);  // 暂停计时
       }
-      let videoCanplay = () => {
+      // 视频canplay监听回调
+      let videoCanplayHandle = () => {
          this.loading = false
          this.playList[this.currentIndex].load = true
       }
       if (that.videoInstance ) {
         // 避免多次绑定,
-        that.videoInstance.removeEventListener('play', videoPlay)
-        that.videoInstance.removeEventListener('pause', videoPause)
-        that.videoInstance.removeEventListener('ended', videoEnded)
-        that.videoInstance.removeEventListener('canplay', videoCanplay)
-
+        that.videoInstance.removeEventListener('play', videoPlayHandle)
+        that.videoInstance.removeEventListener('pause', videoPauseHandle)
+        that.videoInstance.removeEventListener('ended', videoEndedHandle)
+        that.videoInstance.removeEventListener('canplay', videoCanplayHandle)
         // 播放
-        that.videoInstance.addEventListener('play', videoPlay, false);
+        that.videoInstance.addEventListener('play', videoPlayHandle, false);
         // 暂停
-        that.videoInstance.addEventListener('pause', videoPause, false);
+        that.videoInstance.addEventListener('pause', videoPauseHandle, false);
         // 结束
-        this.videoInstance.addEventListener('ended', videoEnded, false)
+        this.videoInstance.addEventListener('ended', videoEndedHandle, false)
         // 可以播放
-        this.videoInstance.addEventListener('canplay', videoCanplay, false)
-        this.videoInstance.addEventListener('waiting', () => {
-          console.log('粗发waiting')
-           this.loading = true
-           clearInterval(this.currentTimeInterval)
-        }, false)
+        this.videoInstance.addEventListener('canplay', videoCanplayHandle, false)
         // 预先加载下一个视频碎片
         this.videoPreLoad()
+        this.captureFisrt()
       }
     },
-    initDraw() {
-      this.canvasInstance.drawImage(this.videoInstance, 0, 0, 270, 135)
+    captureFisrt() {
+      const that = this
+      that.videoInstance.addEventListener('loadeddata', function callback() {
+          if(that.videoInstance.readyState >= 2) {
+            that.canvasInstance.drawImage(that.videoInstance, 0, 0, 400, 200)
+            that.videoInstance.removeEventListener('loadeddata', callback)
+          }
+      });
     },
     /*
       @param ms 秒数
@@ -171,6 +173,7 @@ export default {
         // 当拖到最前的时候 播放第一个
         this.videoInstance.src = this.playList[0].src;
       } else {
+        console.log('是拖拽')
         // 拖动进度条
         this.playList.map((item, i) => {
           // 判断当前滑点在哪个视频源上
@@ -183,6 +186,10 @@ export default {
             this.loading = !item.load
             if (item.load) {
               this.triggerPlay()
+            } else {
+              clearInterval(this.currentTimeInterval)
+              clearInterval(this.drawTimerInterval)
+              this.videoInstance.load()
             }
           }
           tempLength = tempLength + item.duration
@@ -193,11 +200,9 @@ export default {
       clearInterval(this.currentTimeInterval)
       clearInterval(this.drawTimerInterval)
       if (!this.videoInstance.paused && !this.pauseing) {
-        console.log('暂停')
         this.videoInstance.pause()
         this.pauseing = true
       } else if(this.playList[this.currentIndex].load && !this.playing) {
-        console.log('开始播放')
         this.videoInstance.play()
         this.pauseing = false
       }
