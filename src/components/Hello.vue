@@ -181,16 +181,15 @@ export default {
           if (item.position < val & val < (item.position + item.duration)) {
             this.currentIndex = i // 显示当前的video
             this.init() // 初始化video实例
-            this.currentTime = this.durationFormat(val)
-            this.videoInstance.currentTime = val - tempLength
-            this.loading = !item.load
-            if (item.load) {
-              this.triggerPlay()
-            } else {
+            if (!item.load) {
               clearInterval(this.currentTimeInterval)
               clearInterval(this.drawTimerInterval)
+              this.loading = true
               this.videoInstance.load()
             }
+            this.currentTime = this.durationFormat(val)
+            this.videoInstance.currentTime = val - tempLength
+
           }
           tempLength = tempLength + item.duration
         })
