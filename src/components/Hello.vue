@@ -20,7 +20,7 @@
 </template>
 <script>
 import moment from 'moment'
-require("moment-duration-format")
+require('moment-duration-format')
 export default {
   name: 'hello',
   data () {
@@ -55,7 +55,7 @@ export default {
       }]
     }
   },
-  mounted() {
+  mounted () {
     let c = document.getElementById('myCanvas')
     this.canvasInstance = c.getContext('2d')
     this.terminalTime = this.durationFormat(this.allLength) // 格式化所有视频长度
@@ -63,23 +63,23 @@ export default {
   },
   watch: {
     // 检控时间条
-    progress: function(newVal, oldVal) {
+    progress: function (newVal, oldVal) {
       let diff = Number(Math.abs(newVal - oldVal)).toFixed(2)
-      if(diff > 1) { // 表示是拖拽的 不是自然累加的
+      if (diff > 1) { // 表示是拖拽的 不是自然累加的
         this.progressAutoAdd = false
       }
     },
     // loading成功之后 触发一次播放
-    loading: function(newVal, oldVal) {
+    loading: function (newVal, oldVal) {
       if (!newVal && newVal != oldVal) {
         this.triggerPlay()
       }
     }
   },
   methods: {
-    init() {
+    init () {
       const that = this
-      that.videoInstance = document.querySelectorAll('video')[this.currentIndex];
+      that.videoInstance = document.querySelectorAll('video')[this.currentIndex]
       this.drawTimerInterval = null
       this.currentTimeInterval = null
       // 视频play监听回调
@@ -89,27 +89,27 @@ export default {
         this.pauseing = false
         console.log('this.drawTimerInterval', this.drawTimerInterval)
         this.drawTimerInterval = window.setInterval(() => {
-            that.canvasInstance.drawImage(that.videoInstance, 0, 0, 400, 200);
-        }, 20);  // 每0.02秒画一张图片
+          that.canvasInstance.drawImage(that.videoInstance, 0, 0, 400, 200)
+        }, 20)  // 每0.02秒画一张图片
         this.currentTimeInterval = window.setInterval(() => {
           // console.log(this.videoInstance.buffered)
           that.progressAutoAdd = true
           that.progress = that.progress < this.allLength ? that.progress + 1 : this.allLength // 播放条累计
           that.currentTime = that.durationFormat(that.progress)
-        }, 1000);  // 一秒钟更新一次
+        }, 1000)  // 一秒钟更新一次
       }
       // 视频pause监听回调
       let videoPauseHandle = () => {
-          this.playing = false
-          this.pauseing = true
-          clearInterval(this.drawTimerInterval);  // 暂停绘画
-          clearInterval(this.currentTimeInterval);  // 暂停计时
+        this.playing = false
+        this.pauseing = true
+        clearInterval(this.drawTimerInterval) // 暂停绘画
+        clearInterval(this.currentTimeInterval) // 暂停计时
       }
       // 视频ended监听回调
       let videoEndedHandle = () => {
-        if (this.currentIndex < this.playList.length-1) {
-          this.currentIndex++
-          this.$nextTick(()=> {
+        if (this.currentIndex < this.playList.length - 1) {
+          this.currentIndex ++
+          this.$nextTick(() => {
             this.init()
             this.triggerPlay()
           })
@@ -118,24 +118,24 @@ export default {
           this.pauseing = true
         }
         // 清除绘制计时器
-        clearInterval(this.drawTimerInterval);  // 暂停绘画
-        clearInterval(this.currentTimeInterval);  // 暂停计时
+        clearInterval(this.drawTimerInterval) // 暂停绘画
+        clearInterval(this.currentTimeInterval) // 暂停计时
       }
       // 视频canplay监听回调
       let videoCanplayHandle = () => {
-         this.loading = false
-         this.playList[this.currentIndex].load = true
+        this.loading = false
+        this.playList[this.currentIndex].load = true
       }
-      if (that.videoInstance ) {
+      if (that.videoInstance) {
         // 避免多次绑定,
         that.videoInstance.removeEventListener('play', videoPlayHandle)
         that.videoInstance.removeEventListener('pause', videoPauseHandle)
         that.videoInstance.removeEventListener('ended', videoEndedHandle)
         that.videoInstance.removeEventListener('canplay', videoCanplayHandle)
         // 播放
-        that.videoInstance.addEventListener('play', videoPlayHandle, false);
+        that.videoInstance.addEventListener('play', videoPlayHandle, false)
         // 暂停
-        that.videoInstance.addEventListener('pause', videoPauseHandle, false);
+        that.videoInstance.addEventListener('pause', videoPauseHandle, false)
         // 结束
         this.videoInstance.addEventListener('ended', videoEndedHandle, false)
         // 可以播放
@@ -145,25 +145,25 @@ export default {
         this.captureFisrt()
       }
     },
-    captureFisrt() {
+    captureFisrt () {
       const that = this
-      that.videoInstance.addEventListener('loadeddata', function callback() {
-          if(that.videoInstance.readyState >= 2) {
-            that.canvasInstance.drawImage(that.videoInstance, 0, 0, 400, 200)
-            that.videoInstance.removeEventListener('loadeddata', callback)
-          }
-      });
+      that.videoInstance.addEventListener('loadeddata', function callback () {
+        if (that.videoInstance.readyState >= 2) {
+          that.canvasInstance.drawImage(that.videoInstance, 0, 0, 400, 200)
+          that.videoInstance.removeEventListener('loadeddata', callback)
+        }
+      })
     },
     /*
       @param ms 秒数
     */
-    durationFormat(ms) {
+    durationFormat (ms) {
       // 大过一个小时候的时候 格式化为: h:m:ss
       // 否则不显示小时 只显示 分和秒
-     return ms > 3600 ? moment.duration(ms, "seconds").format('h:m:ss', { trim: false }) : moment.duration(ms, "seconds").format('m:ss', { trim: false })
+      return ms > 3600 ? moment.duration(ms, 'seconds').format('h:m:ss', { trim: false }) : moment.duration(ms, 'seconds').format('m:ss', { trim: false })
     },
-    progressDrag(val) {
-      if(this.progressAutoAdd) return
+    progressDrag (val) {
+      if (this.progressAutoAdd) return
       this.playing = false
       this.pauseing = true
       this.videoInstance.pause() // 当拖拽的是 视频应该暂停,不然声音还一直播放
@@ -171,7 +171,7 @@ export default {
       clearInterval(this.drawTimerInterval)
       if (!val) {
         // 当拖到最前的时候 播放第一个
-        this.videoInstance.src = this.playList[0].src;
+        this.videoInstance.src = this.playList[0].src
       } else {
         console.log('是拖拽')
         // 拖动进度条
@@ -194,25 +194,25 @@ export default {
         })
       }
     },
-    triggerPlay() {
+    triggerPlay () {
       clearInterval(this.currentTimeInterval)
       clearInterval(this.drawTimerInterval)
       if (!this.videoInstance.paused && !this.pauseing) {
         this.videoInstance.pause()
         this.pauseing = true
-      } else if(this.playList[this.currentIndex].load && !this.playing) {
+      } else if (this.playList[this.currentIndex].load && !this.playing) {
         this.videoInstance.play()
         this.pauseing = false
       }
     },
-    videoPreLoad(){
-      let preLoadSourceIndex =  this.currentIndex + 1
-      if(preLoadSourceIndex < this.playList.length) { // 存在就让他去提前加载
+    videoPreLoad () {
+      let preLoadSourceIndex = this.currentIndex + 1
+      if (preLoadSourceIndex < this.playList.length) { // 存在就让他去提前加载
         let nextVedio = document.querySelectorAll('video')[preLoadSourceIndex]
         if (nextVedio && !this.playList[preLoadSourceIndex].load) {
           nextVedio.load()
         }
-        nextVedio &&　nextVedio.addEventListener('canplay', () => {
+        nextVedio && nextVedio.addEventListener('canplay', () => {
           this.playList[preLoadSourceIndex].load = true
         }, false)
       }
