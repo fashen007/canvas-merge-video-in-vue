@@ -10,7 +10,7 @@
       <div class='controls'>
           <el-row :gutter="5" class='row'>
             <el-col :span="3"><div class="grid-content bg-purple"></div><el-button size="mini" @click.native='clickTrigger'>{{pauseing ? '开始': '暂停'}}</el-button></el-col>
-            <el-col :span="7" class='time-duration'><div class="grid-content bg-purple">{{currentTime}}/{{terminalTime}}</div></el-col>
+            <el-col :span="7" class='time-duration'><div class="grid-content bg-purple">{{currentTimeLabel}}/{{terminalTime}}</div></el-col>
             <el-col :span="10"><div class="grid-content bg-purple"><el-slider @change='progressDrag' v-model="progress" :max='allLength'></el-slider></div></el-col>
           </el-row>
       </div>
@@ -26,14 +26,15 @@ export default {
   data () {
     return {
       autoPlay: false, // 是否自动播放
-      progress: 0, // 视频合并之后的时间条
       progressAutoAdd: true, // 表示是否是自己播放的还是拖拽后播放的
       currentEnoughToPlay: false, // 表示是否需要显示enoughToPlay状态
       pauseing: true, // 暂停状态
       playing: false, // 播放状态
       sounds: 10, // 声音控制,暂时还没实现
-      allLength: 82, // 总长度.这个是需要后端返回的
-      currentTime: '0:00', // 默认播放时间
+      progress: 0,
+      allLength: 134, // 总长度.这个是需要后端返回的
+      currentTimeLabel: '0:00', // 默认播放时间 用来显示
+      currentTime: 0,
       currentIndex: 0, // 默认当前播放碎片指引
       terminalTime: '', // 终点
       videoInstance: null, // 当前激活的视频实例
@@ -62,47 +63,51 @@ export default {
     }
   },
   mounted () {
+    this.progressSetTimeout = null
+    this.hasPlayTime = 0
     let c = document.getElementById('myCanvas')
     this.canvasInstance = c.getContext('2d')
-    this.terminalTime = this.durationFormat(this.allLength) // 格式化所有视频长度
+    this.terminalTime = this.durationFormat((this.allLength)) // 格式化所有视频长度
     this.init()
   },
   watch: {
-    // 检控时间条
-    progress: function (newVal, oldVal) {
-      let diff = Number(Math.abs(newVal - oldVal)).toFixed(2)
-      if (diff > 1) { // 表示是拖拽的 不是自然累加的
-        this.progressAutoAdd = false
-      }
-    },
     // currentEnoughToPlay之后 触发一次播放
     currentEnoughToPlay: function (newVal, oldVal) {
       if (newVal && newVal != oldVal) {
         this.triggerPlay()
       }
+    },
+    currentTime: function (newVal, oldVal) {
+      const that = this
+      if (newVal != oldVal) {
+        let diff = newVal - oldVal
+        this.hasPlayTime = this.hasPlayTime + (diff > 0 ? diff : 0)
+        this.canvasInstance.drawImage(this.videoInstance, 0, 0, 400, 200)
+        that.progressSetTimeout = window.setTimeout(() => {
+          that.currentTimeLabel = that.durationFormat(Math.floor(this.hasPlayTime))
+        }, 1000)  // 一秒钟更新一次
+      }
     }
   },
   methods: {
-    init (param) {
+    init () {
       const that = this
       that.videoInstance = document.querySelectorAll('video')[this.currentIndex]
       this.drawTimerInterval = null
-      this.currentTimeInterval = null
+      this.progressInterval && clearInterval(this.progressInterval)
+      this.drawTimerInterval && clearInterval(this.drawTimerInterval)
       // 视频play监听回调
       let videoPlayHandle = () => {
-        window.clearInterval(this.currentTimeInterval)
-        window.clearInterval(this.drawTimerInterval)
         this.playing = true
         this.pauseing = false
+        console.log('播放一下呗')
         this.drawTimerInterval = window.setInterval(() => {
-          that.canvasInstance.drawImage(that.videoInstance, 0, 0, 400, 200)
+          this.currentTime = that.videoInstance.currentTime
         }, 20)  // 每0.02秒画一张图片
-        this.currentTimeInterval = window.setInterval(() => {
-          // console.log(this.videoInstance.buffered)
-          that.progressAutoAdd = true
-          that.progress = that.progress < this.allLength ? that.progress + 1 : this.allLength // 播放条累计
-          that.currentTime = that.durationFormat(that.progress)
-        }, 1000)  // 一秒钟更新一次
+        this.progressInterval = window.setInterval(() => {
+          that.progress = Math.floor(that.hasPlayTime)
+          console.log('我还是执行了')
+        }, 1000)  // 每0.02秒画一张图片
       }
       // 视频pause监听回调
       let videoPauseHandle = () => {
@@ -123,7 +128,6 @@ export default {
         }
         // 清除绘制计时器
         clearInterval(this.drawTimerInterval) // 暂停绘画
-        clearInterval(this.currentTimeInterval) // 暂停计时
       }
       // 视频canplay监听回调
       let videoCanplayHandle = () => {
@@ -132,7 +136,6 @@ export default {
       }
       // 视频等待缓冲监听回调
       let videoWaitingHandle = () => {
-        clearInterval(this.currentTimeInterval) // 暂停计时
         this.playList[this.currentIndex].enoughToPlay = false
         this.playing = false
         this.pauseing = true
@@ -177,48 +180,35 @@ export default {
       return ms > 3600 ? moment.duration(ms, 'seconds').format('h:m:ss', { trim: false }) : moment.duration(ms, 'seconds').format('m:ss', { trim: false })
     },
     progressDrag (val) {
-      if (this.progressAutoAdd) return
+      if (val == Math.floor(this.hasPlayTime)) return // 表示是自动播放过程
+      // 拖拽了
+      clearInterval(this.progressInterval)
+      clearInterval(this.drawTimerInterval)
       this.playing = false
       this.pauseing = true
       this.videoInstance.pause() // 当拖拽的是 视频应该暂停,不然声音还一直播放
-      clearInterval(this.currentTimeInterval)
-      clearInterval(this.drawTimerInterval)
-      if (!val) {
-        // 当拖到最前的时候 播放第一个
-        this.videoInstance.src = this.playList[0].src
-      } else {
-        console.log('是拖拽')
-        // 拖动进度条
-        this.playList.map((item, i) => {
-          // 判断当前滑点在哪个视频源上
-          let tempLength = 0 // 记录当前滑点之前的视频时间总长度
-          if (item.position < val & val < (item.position + item.duration)) {
-            this.currentIndex = i // 显示当前的video
+      // 拖动进度条
+      this.playList.map((item, i) => {
+        // 判断当前滑点在哪个视频源上
+        let tempLength = 0 // 记录当前滑点之前的视频时间总长度
+        if (item.position <= val & val < (item.position + item.duration)) {
+          if (this.currentIndex != i) { // 显示当前的video
+            this.currentIndex = i
             this.init() // 初始化video实例
-            // if (!item.enoughToPlay) {
-            //   clearInterval(this.currentTimeInterval)
-            //   clearInterval(this.drawTimerInterval)
-            //   this.currentEnoughToPlay = false
-            //   this.videoInstance.load()
-            // }
-            this.currentTime = this.durationFormat(val)
-            this.videoInstance.currentTime = val - tempLength
           }
-          tempLength = tempLength + item.duration
-        })
-      }
+          this.hasPlayTime = val
+          this.videoInstance.currentTime = val - tempLength
+        }
+        tempLength = tempLength + item.duration
+      })
     },
     clickTrigger () {
       this.autoPlay = true
       this.triggerPlay()
     },
     triggerPlay () {
-      clearInterval(this.currentTimeInterval)
       clearInterval(this.drawTimerInterval)
-      console.log('this.autoPlay', this.autoPlay)
-      console.log(this.currentEnoughToPlay)
-      if (!this.currentEnoughToPlay || !this.autoPlay) return // 表示当前的视频出现卡顿现象
-
+      clearInterval(this.progressInterval)
       if (this.playing) {
         this.videoInstance.pause()
       } else {
