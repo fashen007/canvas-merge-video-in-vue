@@ -30,7 +30,7 @@ require('moment-duration-format')
 var drawTimerInterval = null
 var progressInterval = null
 export default {
-  name: 'hello',
+  name: 'MergeVideo',
   data () {
     return {
       autoPlay: false, // 是否自动播放

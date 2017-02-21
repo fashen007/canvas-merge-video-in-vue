@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <router-view></router-view>
+    <!-- <router-view></router-view> 暂时用不上-->
   </div>
 </template>
 
