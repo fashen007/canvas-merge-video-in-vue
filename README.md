@@ -13,7 +13,7 @@ npm run dev
 npm run build
 ```
 # canvas-merge-video-in-vue 利用canvas+vue进行视频碎片合并
-> 此pro注意点：
+## 此pro注意点：
 1.并没有考虑性能
 2.只支持温柔使用
 3.没有catch error状态
@@ -32,7 +32,7 @@ npm run dev
 # build for production with minification
 npm run build
 ```
-> 默认data对象说明
+## 默认data对象说明
 
 ```
 autoPlay: false, // 是否自动播放
@@ -52,7 +52,7 @@ canvasInstance: null, // canvas 实例
 playList: [] // 碎片列表
 ```
 
-> 实现思路
+## 实现思路
 1.先把所有视频碎片丢到`dom`里面
 
 2.控制当前碎片指引，进行实例`dom`切换
@@ -63,7 +63,7 @@ playList: [] // 碎片列表
 
 5.通过`video`的`onend`事件连接碎片
 
-> 存在问题
+## 存在问题
 
 1.来回拖动进度条的时候可能会出现卡顿现象视频 报错
 
