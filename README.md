@@ -35,22 +35,23 @@ npm run dev
 npm run build
 ```
 > 默认data对象说明
-     autoPlay: false, // 是否自动播放
-     currentEnoughToPlay: false, // 表示是否需要显示enoughToPlay状态
-     pauseing: true, // 暂停状态
-     playing: false, // 播放状态
-     sounds: 10, // 声音控制
-     mutedable: false, // 是否静音
-     progress: 0, // 进度条
-     allLength: 0, // 总长度.这个是需要后端返回的
-     currentTimeLabel: '0:00', // 默认播放时间 用来显示
-     terminalTimeLabel: '', // 终点时间
-     currentTime: 0, // 当前时间
-     currentIndex: 0, // 默认当前播放碎片指引
-     videoInstance: null, // 当前激活的视频实例
-     canvasInstance: null, // canvas 实例
-     playList: [] // 碎片列表
-
+```
+   autoPlay: false, // 是否自动播放
+   currentEnoughToPlay: false, // 表示是否需要显示enoughToPlay状态
+   pauseing: true, // 暂停状态
+   playing: false, // 播放状态
+   sounds: 10, // 声音控制
+   mutedable: false, // 是否静音
+   progress: 0, // 进度条
+   allLength: 0, // 总长度.这个是需要后端返回的
+   currentTimeLabel: '0:00', // 默认播放时间 用来显示
+   terminalTimeLabel: '', // 终点时间
+   currentTime: 0, // 当前时间
+   currentIndex: 0, // 默认当前播放碎片指引
+   videoInstance: null, // 当前激活的视频实例
+   canvasInstance: null, // canvas 实例
+   playList: [] // 碎片列表
+```
 > 实现思路
 1.先把所有视频碎片丢到`dom`里面
 
