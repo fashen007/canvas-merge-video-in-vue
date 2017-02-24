@@ -45,13 +45,6 @@ export default {
     this.hasPlayTime = 0
     let c = document.getElementById('myCanvas')
     this.canvasInstance = c.getContext('2d')
-    this.terminalTimeLabel = this.durationFormat((this.allLength)) // 格式化所有视频长度
-    this.playList.map((item) => {
-      this.allLength = this.allLength + item.duration
-    })
-    this.$nextTick(() => {
-      this.init()
-    })
   },
   data () {
     return {
@@ -73,6 +66,10 @@ export default {
   watch: {
     playList: function (newVal, oldVal) {
       if (newVal.length && newVal != oldVal) {
+        this.playList.map((item) => {
+          this.allLength = this.allLength + item.duration
+        })
+        this.terminalTimeLabel = this.durationFormat((this.allLength)) // 格式化所有视频长度
         this.$nextTick(() => {
           this.init()
         })
@@ -102,8 +99,6 @@ export default {
   methods: {
     init () {
       const that = this
-      console.log('this.currentIndex', this.currentIndex)
-      console.log('document', document.querySelectorAll('video'))
       this.videoInstance = document.querySelectorAll('video')[this.currentIndex]
       if (!this.videoInstance) return
       this.videoInstance.volume = this.sounds / 100
@@ -130,8 +125,8 @@ export default {
         } else {
           this.playing = false
           this.pauseing = true
+          this.clearIntervaler()
         }
-        this.clearIntervaler()
       }
       // 视频canplay监听回调
       let videoCanplayHandle = () => {

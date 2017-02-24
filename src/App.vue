@@ -22,8 +22,9 @@ export default {
   },
   methods: {
     getData: function () {
+      const that = this
       setTimeout(() => {
-        this.playList = [{
+        that.playList = [{
           src: 'http://www.w3school.com.cn/example/html5/mov_bbb.mp4',
           duration: 10, // 长度
           position: 53 // 节点
@@ -40,7 +41,6 @@ export default {
           duration: 60,
           position: 75
         }]
-        console.log(this.playList)
       }, 2000)
     }
   }
