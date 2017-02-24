@@ -303,3 +303,9 @@ input[type=range][orient=vertical]{
     padding: 0 5px;
 }
 </style>
+<style>
+.el-loading-mask {
+  margin-bottom: 36px !important;
+  background-color: #000;
+}
+</style>
