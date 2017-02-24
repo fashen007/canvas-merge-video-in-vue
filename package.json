@@ -6,11 +6,17 @@
   "scripts": {
     "dev": "nodemon build/dev-server.js",
     "build": "node build/build.js",
+    "prod": "webpack --config build/webpack.config.js",
     "unit": "cross-env BABEL_ENV=test karma start test/unit/karma.conf.js --single-run",
     "e2e": "node test/e2e/runner.js",
     "test": "npm run unit && npm run e2e",
     "lint": "eslint --ext .js,.vue src test/unit/specs test/e2e/specs"
   },
+  "main": "dist/canvasMergeVideo.js",
+  "files": [
+    "dist",
+    "src"
+  ],
   "dependencies": {
     "element-ui": "^1.1.6",
     "moment": "^2.17.1",
