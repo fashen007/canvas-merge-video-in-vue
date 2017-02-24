@@ -18,7 +18,6 @@
               </div>
             </el-col>
           </el-row>
-
       </div>
     </div>
 </div>
@@ -31,23 +30,14 @@ var drawTimerInterval = null
 var progressInterval = null
 export default {
   name: 'MergeVideo',
-  data () {
-    return {
-      autoPlay: false, // 是否自动播放
-      currentEnoughToPlay: false, // 表示是否需要显示enoughToPlay状态
-      pauseing: true, // 暂停状态
-      playing: false, // 播放状态
-      sounds: 10, // 声音控制
-      mutedable: false, // 是否静音
-      progress: 0, // 进度条
-      allLength: 0, // 总长度.这个是需要后端返回的
-      currentTimeLabel: '0:00', // 默认播放时间 用来显示
-      terminalTimeLabel: '', // 终点时间
-      currentTime: 0, // 当前时间
-      currentIndex: 0, // 默认当前播放碎片指引
-      videoInstance: null, // 当前激活的视频实例
-      canvasInstance: null, // canvas 实
-      playList: []
+  props: {
+    autoPlay: {
+      type: Boolean,
+      default: false
+    },
+    playList: {
+      type: Array,
+      default: []
     }
   },
   mounted () {
@@ -56,9 +46,38 @@ export default {
     let c = document.getElementById('myCanvas')
     this.canvasInstance = c.getContext('2d')
     this.terminalTimeLabel = this.durationFormat((this.allLength)) // 格式化所有视频长度
-    this.getData()
+    this.playList.map((item) => {
+      this.allLength = this.allLength + item.duration
+    })
+    this.$nextTick(() => {
+      this.init()
+    })
+  },
+  data () {
+    return {
+      progress: 0, // 进度条
+      allLength: 0, // 总长度.这个是需要后端返回的
+      currentTimeLabel: '0:00', // 默认播放时间 用来显示
+      terminalTimeLabel: '', // 终点时间
+      currentTime: 0, // 当前时间
+      currentIndex: 0, // 默认当前播放碎片指引
+      currentEnoughToPlay: false, // 表示是否需要显示enoughToPlay状态
+      pauseing: true, // 暂停状态
+      playing: false, // 播放状态
+      sounds: 10, // 声音控制
+      mutedable: false, // 是否静音
+      videoInstance: null, // 当前激活的视频实例
+      canvasInstance: null // canvas 实
+    }
   },
   watch: {
+    playList: function (newVal, oldVal) {
+      if (newVal.length && newVal != oldVal) {
+        this.$nextTick(() => {
+          this.init()
+        })
+      }
+    },
     // currentEnoughToPlay之后 触发一次播放
     currentEnoughToPlay: function (newVal, oldVal) {
       if (newVal && newVal != oldVal) {
@@ -81,37 +100,12 @@ export default {
     }
   },
   methods: {
-    getData () {
-      // 后端请求 之后
-      this.playList = [{ // 碎片资源列表  这个是需要后端返回的
-        src: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
-        duration: 52, // 长度
-        position: 0, // 节点
-        enoughToPlay: false // 是否加载过  但是不一定是加载完成了
-      }, {
-        src: 'http://www.w3school.com.cn/example/html5/mov_bbb.mp4',
-        duration: 10, // 长度
-        position: 53, // 节点
-        enoughToPlay: false // 是否加载过  但是不一定是加载完成了
-      }, {
-        src: 'https://www.w3schools.com/html/movie.mp4',
-        duration: 12,
-        position: 63,
-        enoughToPlay: false
-      }, {
-        src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4',
-        duration: 60,
-        position: 75,
-        enoughToPlay: false
-      }]
-      this.allLength = 134 // 这里需要用一个for循环去累加 后端返回视屏碎片的长度 我就简单写死了
-      this.$nextTick(() => {
-        this.init()
-      })
-    },
     init () {
       const that = this
+      console.log('this.currentIndex', this.currentIndex)
+      console.log('document', document.querySelectorAll('video'))
       this.videoInstance = document.querySelectorAll('video')[this.currentIndex]
+      if (!this.videoInstance) return
       this.videoInstance.volume = this.sounds / 100
       this.mutedable = this.videoInstance.muted
       // 视频play监听回调
@@ -144,24 +138,22 @@ export default {
         this.currentEnoughToPlay = true
         this.playList[this.currentIndex].enoughToPlay = true
       }
-      if (that.videoInstance) {
-        // 避免多次绑定,
-        that.videoInstance.removeEventListener('play', videoPlayHandle)
-        that.videoInstance.removeEventListener('pause', videoPauseHandle)
-        that.videoInstance.removeEventListener('ended', videoEndedHandle)
-        that.videoInstance.removeEventListener('canplay', videoCanplayHandle)
-        // 播放
-        that.videoInstance.addEventListener('play', videoPlayHandle, false)
-        // 暂停
-        that.videoInstance.addEventListener('pause', videoPauseHandle, false)
-        // 结束
-        this.videoInstance.addEventListener('ended', videoEndedHandle, false)
-        // 可以播放
-        this.videoInstance.addEventListener('canplay', videoCanplayHandle, false)
-        // 预先加载下一个视频碎片
-        this.videoPreLoad()
-        this.captureFisrt()
-      }
+      // 避免多次绑定,
+      that.videoInstance.removeEventListener('play', videoPlayHandle)
+      that.videoInstance.removeEventListener('pause', videoPauseHandle)
+      that.videoInstance.removeEventListener('ended', videoEndedHandle)
+      that.videoInstance.removeEventListener('canplay', videoCanplayHandle)
+      // 播放
+      that.videoInstance.addEventListener('play', videoPlayHandle, false)
+      // 暂停
+      that.videoInstance.addEventListener('pause', videoPauseHandle, false)
+      // 结束
+      this.videoInstance.addEventListener('ended', videoEndedHandle, false)
+      // 可以播放
+      this.videoInstance.addEventListener('canplay', videoCanplayHandle, false)
+      // 预先加载下一个视频碎片
+      this.videoPreLoad()
+      this.captureFisrt()
     },
     captureFisrt () {
       const that = this
