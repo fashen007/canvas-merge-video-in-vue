@@ -1,8 +1,19 @@
 # canvas-merge-video-in-vue
 
-> A Vue.js project
+##组件引入方式
+```
+1.import
+2.
 
-## Build Setup
+```
+##组件传参说明
+```
+autoPlay: false, // 是否自动播放
+playList: [] // 碎片列表
+```
+
+
+## fork项目跑起来
 
 ``` bash
 # install dependencies
@@ -15,7 +26,7 @@ npm run dev
 npm run build
 ```
 # canvas-merge-video-in-vue 利用canvas+vue进行视频碎片合并
-> 此pro注意点：
+## 此pro注意点：
 1.并没有考虑性能
 2.只支持温柔使用
 3.没有catch error状态
@@ -34,25 +45,26 @@ npm run dev
 # build for production with minification
 npm run build
 ```
-> 默认data对象说明
+## 组件内部默认data对象说明
+
 ```
-   autoPlay: false, // 是否自动播放
-   currentEnoughToPlay: false, // 表示是否需要显示enoughToPlay状态
-   pauseing: true, // 暂停状态
-   playing: false, // 播放状态
-   sounds: 10, // 声音控制
-   mutedable: false, // 是否静音
-   progress: 0, // 进度条
-   allLength: 0, // 总长度.这个是需要后端返回的
-   currentTimeLabel: '0:00', // 默认播放时间 用来显示
-   terminalTimeLabel: '', // 终点时间
-   currentTime: 0, // 当前时间
-   currentIndex: 0, // 默认当前播放碎片指引
-   videoInstance: null, // 当前激活的视频实例
-   canvasInstance: null, // canvas 实例
-   playList: [] // 碎片列表
+currentEnoughToPlay: false, // 表示是否需要显示enoughToPlay状态
+pauseing: true, // 暂停状态
+playing: false, // 播放状态
+sounds: 10, // 声音控制
+mutedable: false, // 是否静音
+progress: 0, // 进度条
+allLength: 0, // 总长度.这个是需要后端返回的
+currentTimeLabel: '0:00', // 默认播放时间 用来显示
+terminalTimeLabel: '', // 终点时间
+currentTime: 0, // 当前时间
+currentIndex: 0, // 默认当前播放碎片指引
+videoInstance: null, // 当前激活的视频实例
+canvasInstance: null, // canvas 实例
+
 ```
-> 实现思路
+
+## 实现思路
 1.先把所有视频碎片丢到`dom`里面
 
 2.控制当前碎片指引，进行实例`dom`切换
@@ -63,10 +75,10 @@ npm run build
 
 5.通过`video`的`onend`事件连接碎片
 
-> 存在问题
+## 存在问题
 
 1.来回拖动进度条的时候可能会出现卡顿现象视频 报错
 
-2.。。
+2.兼容性问题
 
 3.。
