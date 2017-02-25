@@ -1,4 +1,5 @@
 <template>
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-default/index.css">
   <div class="hello">
     <template v-for='(list, i) in playList'>
       <video class="video" controls width="270" v-show='i == currentIndex' style='position:absolute; left: 9999px;'>
