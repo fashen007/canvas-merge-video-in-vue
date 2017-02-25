@@ -10,12 +10,13 @@
 import MergeVideo from 'canvasmergevideo'
 Vue.use(MergeVideo)
 ```
+```
 
+```
 ##组件传参说明
 ```
 autoPlay: false, // 是否自动播放
 playList: [] // 碎片列表
-sounds: 20 // 声音大小 0--100
 ```
 
 

@@ -1,6 +1,6 @@
 {
   "name": "canvasmergevideo",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "use canvas merge videos in browser",
   "author": "spademan <646028751@qq.com>",
   "scripts": {
