@@ -11,7 +11,11 @@ import MergeVideo from 'canvasmergevideo'
 Vue.use(MergeVideo)
 ```
 ```
-
+<template>
+  <div id="app">
+    <merge-video :playList='playList' :autoPlay='autoPlay'></merge-video>
+  </div>
+</template>
 ```
 ##组件传参说明
 ```
