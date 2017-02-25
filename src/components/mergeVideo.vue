@@ -24,8 +24,11 @@
   </div>
 </template>
 <script>
+import Vue from 'vue'
 import moment from 'moment'
 require('moment-duration-format')
+import Element from 'element-ui'
+Vue.use(Element)
 var drawTimerInterval = null
 var progressInterval = null
 export default {

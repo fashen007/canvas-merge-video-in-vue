@@ -2,16 +2,25 @@
 
 ##组件引入方式
 ```
-1.import
-2.
+1.npm install canvas-merge-video-in-vue --save
 
 ```
+##组件使用
+```
+import MergeVideo from 'canvas-merge-video-in-vue'
+Vue.use(MergeVideo)
+```
+
 ##组件传参说明
 ```
 autoPlay: false, // 是否自动播放
 playList: [] // 碎片列表
 sounds: 20 // 声音大小 0--100
 ```
+
+
+
+>如果需要 fork项目 clone之后，安装方法如下
 
 
 ## fork项目跑起来
