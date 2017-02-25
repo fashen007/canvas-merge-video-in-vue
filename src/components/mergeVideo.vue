@@ -1,6 +1,6 @@
 <template>
-  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-default/index.css">
   <div class="hello">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-default/index.css">
     <template v-for='(list, i) in playList'>
       <video class="video" controls width="270" v-show='i == currentIndex' style='position:absolute; left: 9999px;'>
         <source :src="list.src" type='video/mp4' key='i' >
@@ -22,8 +22,10 @@
       </div>
     </div>
 </div>
+
   </div>
 </template>
+
 <script>
 import Vue from 'vue'
 import moment from 'moment'

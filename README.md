@@ -2,12 +2,12 @@
 
 ##组件引入方式(暂时有问题)
 ```
-1.npm install canvas-merge-video-in-vue --save
+1.npm install canvasmergevideo --save
 
 ```
 ##组件使用
 ```
-import MergeVideo from 'canvas-merge-video-in-vue'
+import MergeVideo from 'canvasmergevideo'
 Vue.use(MergeVideo)
 ```
 
