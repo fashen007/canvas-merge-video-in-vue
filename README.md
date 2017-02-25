@@ -1,6 +1,6 @@
 # canvas-merge-video-in-vue
 
-##组件引入方式
+##组件引入方式(暂时有问题)
 ```
 1.npm install canvas-merge-video-in-vue --save
 
