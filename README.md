@@ -49,11 +49,12 @@ npm run dev
 npm run build
 ```
 ### 此pro注意点：
+```
 1.并没有考虑性能
 2.只支持温柔使用
 3.没有catch error状态
 4.loading状态正在完善中
-
+```
 ### Build Setup
 
 ``` bash
