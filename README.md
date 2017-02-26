@@ -1,6 +1,7 @@
 # canvas-merge-video-in-vue
-##一.组件使用
-###组件引入方式(暂时有问题)
+##一.组件形式使用
+
+###组件引入方式
 ```
 1.npm install canvasmergevideo --save
 
@@ -35,8 +36,8 @@ sounds: Number// 声音 Number
 ```
 
 
-##二. fork项目跑起来
 
+##二. fork项目跑起来 (想自己改造源码的同学可以看这个步骤)
 ``` bash
 # install dependencies
 npm install
