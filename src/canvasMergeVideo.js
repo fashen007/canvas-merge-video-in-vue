@@ -1,4 +1,4 @@
-import MergeVideo from './components/mergeVideo'
+import MergeVideo from './components/mergeVideo.vue'
 // const mvue = {
 //   MergeVideo
 // }

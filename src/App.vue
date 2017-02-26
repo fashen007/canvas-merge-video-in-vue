@@ -1,10 +1,8 @@
 <template>
   <div id="app">
-    <!-- <router-view></router-view> 暂时用不上-->
-    <merge-video :autoPlay='autoPlay' :playList='playList'></merge-video>
+  <merge-video :autoPlay='autoPlay' :playList='playList' :sounds='sounds'>
   </div>
 </template>
-
 <script>
 import Vue from 'vue'
 import MergeVideo from '../dist/canvasMergeVideo.js'
@@ -14,7 +12,8 @@ export default {
   data () {
     return {
       autoPlay: true, // 是否自动播放
-      playList: []
+      playList: [],
+      sounds: 50
     }
   },
   mounted: function () {

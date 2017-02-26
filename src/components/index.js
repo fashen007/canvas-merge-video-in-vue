@@ -1,4 +1,4 @@
-import MergeVideo from './MergeVideo.vue'
+import MergeVideo from './MergeVideo'
 
 MergeVideo.install = function (Vue) {
   Vue.component(MergeVideo.name, MergeVideo)

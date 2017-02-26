@@ -17,10 +17,17 @@ Vue.use(MergeVideo)
   </div>
 </template>
 ```
+##需要引入 elmenet-ui的css
+```
+// 因为我后续在拓展的时候需要用到element-ui所以引入了这个ui
+// 在项目的开始
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-default/index.css">
+```
 ##组件传参说明
 ```
-autoPlay: false, // 是否自动播放
-playList: [] // 碎片列表
+autoPlay: false, // 是否自动播放 Boolean
+playList: [] // 碎片列表 Array
+sounds: Number// 声音 Number
 ```
 
 

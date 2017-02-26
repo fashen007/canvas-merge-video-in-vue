@@ -1,6 +1,5 @@
 <template>
   <div class="hello">
-    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-default/index.css">
     <template v-for='(list, i) in playList'>
       <video class="video" controls width="270" v-show='i == currentIndex' style='position:absolute; left: 9999px;'>
         <source :src="list.src" type='video/mp4' key='i' >
@@ -22,8 +21,7 @@
       </div>
     </div>
 </div>
-
-  </div>
+</div>
 </template>
 
 <script>
@@ -44,6 +42,10 @@ export default {
     playList: {
       type: Array,
       default: []
+    },
+    sounds: {
+      type: Number,
+      default: 20
     }
   },
   mounted () {
@@ -63,7 +65,6 @@ export default {
       currentEnoughToPlay: false, // 表示是否需要显示enoughToPlay状态
       pauseing: true, // 暂停状态
       playing: false, // 播放状态
-      sounds: 10, // 声音控制
       mutedable: false, // 是否静音
       videoInstance: null, // 当前激活的视频实例
       canvasInstance: null // canvas 实
