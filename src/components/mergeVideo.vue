@@ -20,6 +20,7 @@
           </el-row>
       </div>
     </div>
+    <audio :src="audioSrc" preload="auto" style='display: none' id='insertAudio'></audio>
 </div>
 </div>
 </template>
@@ -46,13 +47,18 @@ export default {
     sounds: {
       type: Number,
       default: 20
+    },
+    audioSrc: {
+      type: String,
+      default: ''
     }
   },
   mounted () {
     this.progressSetTimeout = null
     this.hasPlayTime = 0
-    let c = document.getElementById('myCanvas')
-    this.canvasInstance = c.getContext('2d')
+    let cv = document.getElementById('myCanvas')
+    this.canvasInstance = cv.getContext('2d')
+    this.audioSrc && this.audioInit()
   },
   data () {
     return {
@@ -65,6 +71,7 @@ export default {
       currentEnoughToPlay: false, // 表示是否需要显示enoughToPlay状态
       pauseing: true, // 暂停状态
       playing: false, // 播放状态
+      audioPlaying: false, // 音频播放状态
       mutedable: false, // 是否静音
       videoInstance: null, // 当前激活的视频实例
       canvasInstance: null // canvas 实
@@ -78,8 +85,10 @@ export default {
         })
         this.terminalTimeLabel = this.durationFormat((this.allLength)) // 格式化所有视频长度
         this.$nextTick(() => {
-          this.init()
+          this.videoInit()
         })
+      } else {
+        console.log('卡了?')
       }
     },
     // currentEnoughToPlay之后 触发一次播放
@@ -96,20 +105,35 @@ export default {
         this.canvasInstance.drawImage(this.videoInstance, 0, 0, 400, 200)
         that.progressSetTimeout = window.setTimeout(() => {
           that.currentTimeLabel = that.durationFormat(Math.floor(this.hasPlayTime))
+          console.log('that.audioInstance.playing', that.audioInstance.playing)
+          if (!that.audioPlaying) {
+            console.log('播放声音')
+            // that.audioInstance.play()
+          }
         }, 1000)  // 一秒钟更新一次
       }
     },
     sounds: function (newVal, oldVal) {
-      this.videoInstance.volume = newVal / 100
+      if (this.audioSrc) { // 如果存在插入音频 视频的音量设置为零
+        this.audioInstance.volume = newVal / 100
+      } else {
+        this.videoInstance.volume = newVal / 100
+      }
     }
   },
   methods: {
-    init () {
+    videoInit () {
       const that = this
       this.videoInstance = document.querySelectorAll('video')[this.currentIndex]
       if (!this.videoInstance) return
-      this.videoInstance.volume = this.sounds / 100
-      this.mutedable = this.videoInstance.muted
+      if (this.audioSrc) { // 如果存在插入音频 视频的音量设置为零
+        this.videoInstance.muted = true
+        this.audioInstance.volume = this.sounds / 100
+        this.mutedable = this.audioInstance.muted
+      } else {
+        this.videoInstance.volume = this.sounds / 100
+        this.mutedable = this.videoInstance.muted
+      }
       // 视频play监听回调
       let videoPlayHandle = () => {
         this.playing = true
@@ -126,7 +150,7 @@ export default {
         if (this.currentIndex < this.playList.length - 1) {
           this.currentIndex ++
           this.$nextTick(() => {
-            this.init()
+            this.videoInit()
             this.triggerPlay()
           })
         } else {
@@ -156,6 +180,21 @@ export default {
       // 预先加载下一个视频碎片
       this.videoPreLoad()
       this.captureFisrt()
+    },
+    audioInit () {
+      this.audioInstance = document.getElementById('insertAudio')
+      // 音频play监听回调
+      let audioPlayHandle = () => {
+        this.audioPlaying = true
+      }
+      // 音频pause监听回调
+      let audioPauseHandle = () => {
+        this.audioPlaying = false
+      }
+      // 播放
+      this.audioInstance.addEventListener('play', audioPlayHandle, false)
+      // 暂停
+      this.audioInstance.addEventListener('pause', audioPauseHandle, false)
     },
     captureFisrt () {
       const that = this
@@ -202,7 +241,7 @@ export default {
           this.hasPlayTime = val
           if (this.currentIndex != i) { // 显示当前的video
             this.currentIndex = i
-            this.init() // 初始化video实例
+            this.videoInit() // 初始化video实例
           }
           this.videoInstance.currentTime = val - item.position
           this.triggerPlay()
@@ -218,14 +257,20 @@ export default {
       this.clearIntervaler()
       if (!this.autoPlay) return
       if (!this.playing && this.pauseing) {
+        this.audioInstance.play()
         this.videoInstance.play()
       } else {
         this.videoInstance.pause()
+        this.audioInstance.pause()
       }
     },
     triggerSound () {
       this.mutedable = !this.mutedable
-      this.videoInstance.muted = this.mutedable
+      if (this.audioSrc) { // 如果存在插入音频 视频的音量设置为零
+        this.audioInstance.muted = this.mutedable
+      } else {
+         this.videoInstance.muted = this.mutedable
+      }
     },
     videoPreLoad () {
       let preLoadSourceIndex = this.currentIndex + 1

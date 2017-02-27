@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-  <merge-video :autoPlay='autoPlay' :playList='playList' :sounds='sounds'>
+  <merge-video :autoPlay='autoPlay' :playList='playList' :sounds='sounds' :audioSrc='audioSrc'>
   </div>
 </template>
 <script>
@@ -13,7 +13,8 @@ export default {
     return {
       autoPlay: true, // 是否自动播放
       playList: [],
-      sounds: 50
+      sounds: 50,
+      audioSrc: 'http://m2.music.126.net/kP1oR0-NH0NGJpLIBzDUmQ==/3413983646810312.mp3'
     }
   },
   mounted: function () {
