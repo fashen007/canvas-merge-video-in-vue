@@ -9,7 +9,7 @@
       <canvas controls id="myCanvas" width='400'height='200'style="border:1px solid #d3d3d3;">Your browser does not support the HTML5 canvas tag.</canvas>
       <div class='controls'>
           <el-row :gutter="5" class='row'>
-            <el-col :span="3"><div class="grid-content bg-purple"></div><el-button size="mini" @click.native='clickTrigger'>{{pauseing ? '开始': '暂停'}}</el-button></el-col>
+            <el-col :span="3"><div class="grid-content bg-purple"></div><el-button size="mini" @click.native='clickTrigger'>{{videoPauseing ? '开始': '暂停'}}</el-button></el-col>
             <el-col :span="7" class='time-duration'><div class="grid-content bg-purple">{{currentTimeLabel}}/{{terminalTimeLabel}}</div></el-col>
             <el-col :span="10"><div class="grid-content bg-purple"><el-slider @change='progressDrag' v-model="progress" :max='allLength'></el-slider></div></el-col>
             <el-col :span="4">
@@ -69,8 +69,7 @@ export default {
       currentTime: 0, // 当前时间
       currentIndex: 0, // 默认当前播放碎片指引
       currentEnoughToPlay: false, // 表示是否需要显示enoughToPlay状态
-      pauseing: true, // 暂停状态
-      playing: false, // 播放状态
+      videoPauseing: true, // 暂停状态
       audioPlaying: false, // 音频播放状态
       mutedable: false, // 是否静音
       videoInstance: null, // 当前激活的视频实例
@@ -87,8 +86,6 @@ export default {
         this.$nextTick(() => {
           this.videoInit()
         })
-      } else {
-        console.log('卡了?')
       }
     },
     // currentEnoughToPlay之后 触发一次播放
@@ -99,18 +96,22 @@ export default {
     },
     currentTime: function (newVal, oldVal) {
       const that = this
+      this.currentEnoughToPlay = true
       if (newVal != oldVal) {
         let diff = newVal - oldVal
         this.hasPlayTime = this.hasPlayTime + (diff > 0 ? (diff > 0.02 ? 0.02 : diff) : 0)
+        console.log('绘制呗')
         this.canvasInstance.drawImage(this.videoInstance, 0, 0, 400, 200)
         that.progressSetTimeout = window.setTimeout(() => {
           that.currentTimeLabel = that.durationFormat(Math.floor(this.hasPlayTime))
-          console.log('that.audioInstance.playing', that.audioInstance.playing)
-          if (!that.audioPlaying) {
-            console.log('播放声音')
-            // that.audioInstance.play()
-          }
         }, 1000)  // 一秒钟更新一次
+      }
+    },
+    currentTimeLabel: function (newVal, oldVal) { // 用来触发声音
+      if (newVal != oldVal) {
+        if (this.audioSrc && !this.audioPlaying) {
+          this.audioInstance.play() // 当拖拽的是 视频应该暂停,不然声音还一直播放
+        }
       }
     },
     sounds: function (newVal, oldVal) {
@@ -136,14 +137,14 @@ export default {
       }
       // 视频play监听回调
       let videoPlayHandle = () => {
-        this.playing = true
-        this.pauseing = false
+        this.videoPauseing = false
         this.drawStart()
+        this.audioInstance.play()
       }
       // 视频pause监听回调
       let videoPauseHandle = () => {
-        this.playing = false
-        this.pauseing = true
+        console.log('pause')
+        this.videoPauseing = true
       }
       // 视频ended监听回调
       let videoEndedHandle = () => {
@@ -154,8 +155,7 @@ export default {
             this.triggerPlay()
           })
         } else {
-          this.playing = false
-          this.pauseing = true
+          this.videoPauseing = true
           this.clearIntervaler()
         }
       }
@@ -163,12 +163,23 @@ export default {
       let videoCanplayHandle = () => {
         this.currentEnoughToPlay = true
         this.playList[this.currentIndex].enoughToPlay = true
+        console.log('canpaly')
+      }
+      // 视频canplay监听回调
+      let videoWaitingHandle = () => {
+        this.videoPauseing = true
+        this.currentEnoughToPlay = false
+        if (this.audioSrc) {
+          this.audioInstance.pause()
+        }
+        console.log('waiting')
       }
       // 避免多次绑定,
       that.videoInstance.removeEventListener('play', videoPlayHandle)
       that.videoInstance.removeEventListener('pause', videoPauseHandle)
       that.videoInstance.removeEventListener('ended', videoEndedHandle)
       that.videoInstance.removeEventListener('canplay', videoCanplayHandle)
+      that.videoInstance.removeEventListener('waiting', videoWaitingHandle)
       // 播放
       that.videoInstance.addEventListener('play', videoPlayHandle, false)
       // 暂停
@@ -177,6 +188,8 @@ export default {
       this.videoInstance.addEventListener('ended', videoEndedHandle, false)
       // 可以播放
       this.videoInstance.addEventListener('canplay', videoCanplayHandle, false)
+      // waiting了
+      this.videoInstance.addEventListener('waiting', videoWaitingHandle, false)
       // 预先加载下一个视频碎片
       this.videoPreLoad()
       this.captureFisrt()
@@ -208,12 +221,12 @@ export default {
     drawStart () {
       const that = this
       this.clearIntervaler()
-      if (!drawTimerInterval && this.playing) {
+      if (!drawTimerInterval && !this.videoPauseing) {
         drawTimerInterval = window.setInterval(() => {
           this.currentTime = that.videoInstance.currentTime
         }, 20)  // 每0.02秒画一张图片
       }
-      if (!progressInterval && this.playing) {
+      if (!progressInterval && !this.videoPauseing) {
         progressInterval = window.setInterval(() => {
           that.progress = Math.floor(that.hasPlayTime)
         }, 1000)  // 每1秒画统计一次时间条
@@ -231,9 +244,10 @@ export default {
       if (val == Math.floor(this.hasPlayTime)) return // 表示是自动播放过程
       // 拖拽了
       this.clearIntervaler()
-      this.pauseing = true
-      this.playing = false
       this.videoInstance.pause() // 当拖拽的是 视频应该暂停,不然声音还一直播放
+      if (this.audioSrc) {
+        this.audioInstance.pause() // 当拖拽的是 视频应该暂停,不然声音还一直播放
+      }
       // 拖动进度条
       this.playList.map((item, i) => {
         // 判断当前滑点在哪个视频源上
@@ -247,6 +261,9 @@ export default {
           this.triggerPlay()
         }
       })
+      if (this.audioSrc) {
+        this.audioInstance.currentTime = this.hasPlayTime
+      }
       this.currentTimeLabel = this.durationFormat(this.hasPlayTime)
     },
     clickTrigger () {
@@ -255,13 +272,16 @@ export default {
     },
     triggerPlay () {
       this.clearIntervaler()
+      console.log('this.videoPauseing', this.videoPauseing)
+      console.log('this.videoInstance.paused', this.videoInstance.paused)
       if (!this.autoPlay) return
-      if (!this.playing && this.pauseing) {
-        this.audioInstance.play()
-        this.videoInstance.play()
-      } else {
+      if (!this.videoInstance.paused && !this.videoPauseing) {
+        if (this.audioSrc) {
+          this.audioInstance.pause()
+        }
         this.videoInstance.pause()
-        this.audioInstance.pause()
+      } else if (this.videoInstance.paused && this.videoPauseing) {
+        this.videoInstance.play()
       }
     },
     triggerSound () {

@@ -27,11 +27,11 @@ export default {
         that.playList = [{
           src: 'http://www.w3school.com.cn/example/html5/mov_bbb.mp4',
           duration: 10, // 长度
-          position: 53 // 节点
+          position: 0 // 视屏在所有碎片视频长度中的开始节点
         }, { // 碎片资源列表  这个是需要后端返回的
           src: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
           duration: 52, // 长度
-          position: 0 // 节点
+          position: 11 // 节点
         }, {
           src: 'https://www.w3schools.com/html/movie.mp4',
           duration: 12,
@@ -40,6 +40,10 @@ export default {
           src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4',
           duration: 60,
           position: 75
+        }, {
+          src: 'http://godsong.bs2dl.yy.com/dmZlNTY3Y2VjZWRlNDM3NGM4MzNkZGE3OGJmYTJhYTVkMTIwMjY0NDI1N21j',
+          duration: 50,
+          position: 135
         }]
       }, 2000)
     }
