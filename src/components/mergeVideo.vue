@@ -5,7 +5,7 @@
         <source :src="list.src" type='video/mp4' key='i' >
       </video>
     </template>
-    <div class='video-cont' v-loading="!currentEnoughToPlay">
+    <div class='video-cont' v-loading="loading">
       <canvas controls id="myCanvas" width='400'height='200'style="border:1px solid #d3d3d3;">Your browser does not support the HTML5 canvas tag.</canvas>
       <div class='controls'>
           <el-row :gutter="5" class='row'>
@@ -69,6 +69,7 @@ export default {
       currentTime: 0, // 当前时间
       currentIndex: 0, // 默认当前播放碎片指引
       currentEnoughToPlay: false, // 表示是否需要显示enoughToPlay状态
+      loading: true,
       videoPauseing: true, // 暂停状态
       audioPlaying: false, // 音频播放状态
       mutedable: false, // 是否静音
@@ -90,17 +91,18 @@ export default {
     },
     // currentEnoughToPlay之后 触发一次播放
     currentEnoughToPlay: function (newVal, oldVal) {
+      console.log('canplay更改触发')
+      console.log('newval', newVal)
       if (newVal && newVal != oldVal) {
         this.triggerPlay()
       }
     },
     currentTime: function (newVal, oldVal) {
       const that = this
-      this.currentEnoughToPlay = true
-      if (newVal != oldVal) {
+      if ((newVal != oldVal) && !this.videoPauseing) {
         let diff = newVal - oldVal
+        this.loading = false
         this.hasPlayTime = this.hasPlayTime + (diff > 0 ? (diff > 0.02 ? 0.02 : diff) : 0)
-        console.log('绘制呗')
         this.canvasInstance.drawImage(this.videoInstance, 0, 0, 400, 200)
         that.progressSetTimeout = window.setTimeout(() => {
           that.currentTimeLabel = that.durationFormat(Math.floor(this.hasPlayTime))
@@ -123,6 +125,54 @@ export default {
     }
   },
   methods: {
+    // 视频play监听回调
+    videoPlayHandle () {
+      console.log('play')
+      this.videoPauseing = false
+      this.drawStart()
+      this.audioInstance.play()
+    },
+    // 视频pause监听回调
+    videoPauseHandle () {
+      this.videoPauseing = true
+    },
+    // 视频ended监听回调
+    videoEndedHandle () {
+      if (this.currentIndex < this.playList.length - 1) {
+        this.currentIndex ++
+        this.$nextTick(() => {
+          this.videoInit()
+          this.triggerPlay()
+        })
+      } else {
+        this.videoPauseing = true
+        this.clearIntervaler()
+      }
+    },
+    // 视频canplay监听回调
+    videoCanplayHandle () {
+      // this.currentEnoughToPlay = true
+      this.playList[this.currentIndex].enoughToPlay = true
+      this.clickTrigger()
+    },
+    // 视频Waiting监听回调
+    videoWaitingHandle () {
+      this.videoPauseing = true
+      this.loading = true
+      this.currentEnoughToPlay = false
+      if (this.audioSrc) {
+        this.audioInstance.pause()
+      }
+      console.log('waiting')
+      console.log('this.loading', this.loading)
+    },
+    removeListener () {
+      this.videoInstance.removeEventListener('play', this.videoPlayHandle)
+      this.videoInstance.removeEventListener('pause', this.videoPauseHandle)
+      this.videoInstance.removeEventListener('ended', this.videoEndedHandle)
+      this.videoInstance.removeEventListener('canplay', this.videoCanplayHandle)
+      this.videoInstance.removeEventListener('waiting', this.videoWaitingHandle)
+    },
     videoInit () {
       const that = this
       this.videoInstance = document.querySelectorAll('video')[this.currentIndex]
@@ -135,61 +185,18 @@ export default {
         this.videoInstance.volume = this.sounds / 100
         this.mutedable = this.videoInstance.muted
       }
-      // 视频play监听回调
-      let videoPlayHandle = () => {
-        this.videoPauseing = false
-        this.drawStart()
-        this.audioInstance.play()
-      }
-      // 视频pause监听回调
-      let videoPauseHandle = () => {
-        console.log('pause')
-        this.videoPauseing = true
-      }
-      // 视频ended监听回调
-      let videoEndedHandle = () => {
-        if (this.currentIndex < this.playList.length - 1) {
-          this.currentIndex ++
-          this.$nextTick(() => {
-            this.videoInit()
-            this.triggerPlay()
-          })
-        } else {
-          this.videoPauseing = true
-          this.clearIntervaler()
-        }
-      }
-      // 视频canplay监听回调
-      let videoCanplayHandle = () => {
-        this.currentEnoughToPlay = true
-        this.playList[this.currentIndex].enoughToPlay = true
-        console.log('canpaly')
-      }
-      // 视频canplay监听回调
-      let videoWaitingHandle = () => {
-        this.videoPauseing = true
-        this.currentEnoughToPlay = false
-        if (this.audioSrc) {
-          this.audioInstance.pause()
-        }
-        console.log('waiting')
-      }
       // 避免多次绑定,
-      that.videoInstance.removeEventListener('play', videoPlayHandle)
-      that.videoInstance.removeEventListener('pause', videoPauseHandle)
-      that.videoInstance.removeEventListener('ended', videoEndedHandle)
-      that.videoInstance.removeEventListener('canplay', videoCanplayHandle)
-      that.videoInstance.removeEventListener('waiting', videoWaitingHandle)
+      this.removeListener()
       // 播放
-      that.videoInstance.addEventListener('play', videoPlayHandle, false)
+      that.videoInstance.addEventListener('play', this.videoPlayHandle, false)
       // 暂停
-      that.videoInstance.addEventListener('pause', videoPauseHandle, false)
+      that.videoInstance.addEventListener('pause', this.videoPauseHandle, false)
       // 结束
-      this.videoInstance.addEventListener('ended', videoEndedHandle, false)
+      this.videoInstance.addEventListener('ended', this.videoEndedHandle, false)
       // 可以播放
-      this.videoInstance.addEventListener('canplay', videoCanplayHandle, false)
+      this.videoInstance.addEventListener('canplay', this.videoCanplayHandle, false)
       // waiting了
-      this.videoInstance.addEventListener('waiting', videoWaitingHandle, false)
+      this.videoInstance.addEventListener('waiting', this.videoWaitingHandle, false)
       // 预先加载下一个视频碎片
       this.videoPreLoad()
       this.captureFisrt()
@@ -221,12 +228,12 @@ export default {
     drawStart () {
       const that = this
       this.clearIntervaler()
-      if (!drawTimerInterval && !this.videoPauseing) {
+      if (!drawTimerInterval) {
         drawTimerInterval = window.setInterval(() => {
           this.currentTime = that.videoInstance.currentTime
         }, 20)  // 每0.02秒画一张图片
       }
-      if (!progressInterval && !this.videoPauseing) {
+      if (!progressInterval) {
         progressInterval = window.setInterval(() => {
           that.progress = Math.floor(that.hasPlayTime)
         }, 1000)  // 每1秒画统计一次时间条
@@ -244,7 +251,11 @@ export default {
       if (val == Math.floor(this.hasPlayTime)) return // 表示是自动播放过程
       // 拖拽了
       this.clearIntervaler()
-      this.videoInstance.pause() // 当拖拽的是 视频应该暂停,不然声音还一直播放
+      this.videoPauseing = true
+      let timer = setTimeout(() => {
+        this.videoInstance.pause() // 当拖拽的是 视频应该暂停,不然声音还一直播放
+        window.clearTimeout(timer)
+      }, 1000);
       if (this.audioSrc) {
         this.audioInstance.pause() // 当拖拽的是 视频应该暂停,不然声音还一直播放
       }
@@ -254,6 +265,7 @@ export default {
         if (item.position <= val & val < (item.position + item.duration)) {
           this.hasPlayTime = val
           if (this.currentIndex != i) { // 显示当前的video
+            this.removeListener()
             this.currentIndex = i
             this.videoInit() // 初始化video实例
           }
@@ -273,14 +285,15 @@ export default {
     triggerPlay () {
       this.clearIntervaler()
       console.log('this.videoPauseing', this.videoPauseing)
-      console.log('this.videoInstance.paused', this.videoInstance.paused)
+      console.log('this.loading', this.loading)
+      console.log('this.autoPlay', this.autoPlay)
       if (!this.autoPlay) return
-      if (!this.videoInstance.paused && !this.videoPauseing) {
+      if (!this.videoPauseing) {
         if (this.audioSrc) {
           this.audioInstance.pause()
         }
         this.videoInstance.pause()
-      } else if (this.videoInstance.paused && this.videoPauseing) {
+      } else {
         this.videoInstance.play()
       }
     },

@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-  <merge-video :autoPlay='autoPlay' :playList='playList' :sounds='sounds' :audioSrc='audioSrc'>
+  <merge-video :autoPlay='autoPlay' :playList='playList' :sounds='sounds' :audioSrc='audioSrc'></merge-video>
   </div>
 </template>
 <script>
