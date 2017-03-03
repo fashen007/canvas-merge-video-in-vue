@@ -23,10 +23,10 @@ Vue.use(MergeVideo)
 ```
 
 ```
-autoPlay: false, // 是否自动播放 Boolean
-playList: [] // 碎片列表 Array
-sounds: Number// 声音 Number
-audioSrc: String// 第三方声音
+autoPlay: false, // 是否自动播放 Boolean(required)
+playList: [] // 碎片列表 Array（）
+sounds: Number// 声音 Number（非必填）
+audioSrc: String// 第三方声音（必填）
 ```
 ###另外需要引入 elmenet-ui的css
 ```
@@ -70,18 +70,19 @@ npm run build
 ```
 ### 组件内部默认data对象说明
 ```
-currentEnoughToPlay: false, // 表示是否需要显示enoughToPlay状态
-pauseing: true, // 暂停状态
-playing: false, // 播放状态
-mutedable: false, // 是否静音
 progress: 0, // 进度条
 allLength: 0, // 总长度.这个是需要后端返回的
 currentTimeLabel: '0:00', // 默认播放时间 用来显示
 terminalTimeLabel: '', // 终点时间
 currentTime: 0, // 当前时间
 currentIndex: 0, // 默认当前播放碎片指引
+currentEnoughToPlay: false, // 表示是否需要显示enoughToPlay状态
+loading: true, // loading状态
+videoPauseing: true, // 暂停状态
+audioPlaying: false, // 音频播放状态
+mutedable: false, // 是否静音
 videoInstance: null, // 当前激活的视频实例
-canvasInstance: null, // canvas 实例
+canvasInstance: null // canvas 实
 
 ```
 
