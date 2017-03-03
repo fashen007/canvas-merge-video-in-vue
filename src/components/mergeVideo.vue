@@ -69,7 +69,7 @@ export default {
       currentTime: 0, // 当前时间
       currentIndex: 0, // 默认当前播放碎片指引
       currentEnoughToPlay: false, // 表示是否需要显示enoughToPlay状态
-      loading: true,
+      loading: true, // loading状态
       videoPauseing: true, // 暂停状态
       audioPlaying: false, // 音频播放状态
       mutedable: false, // 是否静音
@@ -127,7 +127,6 @@ export default {
   methods: {
     // 视频play监听回调
     videoPlayHandle () {
-      console.log('play')
       this.videoPauseing = false
       this.drawStart()
       this.audioInstance.play()
@@ -163,8 +162,6 @@ export default {
       if (this.audioSrc) {
         this.audioInstance.pause()
       }
-      console.log('waiting')
-      console.log('this.loading', this.loading)
     },
     removeListener () {
       this.videoInstance.removeEventListener('play', this.videoPlayHandle)
@@ -252,10 +249,7 @@ export default {
       // 拖拽了
       this.clearIntervaler()
       this.videoPauseing = true
-      let timer = setTimeout(() => {
-        this.videoInstance.pause() // 当拖拽的是 视频应该暂停,不然声音还一直播放
-        window.clearTimeout(timer)
-      }, 1000);
+      this.videoInstance.pause() // 当拖拽的是 视频应该暂停,不然声音还一直播放
       if (this.audioSrc) {
         this.audioInstance.pause() // 当拖拽的是 视频应该暂停,不然声音还一直播放
       }
@@ -284,17 +278,17 @@ export default {
     },
     triggerPlay () {
       this.clearIntervaler()
-      console.log('this.videoPauseing', this.videoPauseing)
-      console.log('this.loading', this.loading)
-      console.log('this.autoPlay', this.autoPlay)
       if (!this.autoPlay) return
       if (!this.videoPauseing) {
         if (this.audioSrc) {
           this.audioInstance.pause()
         }
         this.videoInstance.pause()
-      } else {
+      } else if (this.videoInstance.readyState == 4) {
         this.videoInstance.play()
+      } else {
+        this.loading = true
+        this.videoInstance.load()
       }
     },
     triggerSound () {
