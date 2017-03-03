@@ -16,7 +16,7 @@ Vue.use(MergeVideo)
 ```
 <template>
   <div id="app">
-    <merge-video :playList='playList' :autoPlay='autoPlay'></merge-video>
+    <merge-video :playList='playList' :autoPlay='autoPlay' :audioSrc='audioSrc'></merge-video>
   </div>
 </template>
 
@@ -26,7 +26,7 @@ Vue.use(MergeVideo)
 autoPlay: false, // 是否自动播放 Boolean
 playList: [] // 碎片列表 Array
 sounds: Number// 声音 Number
-
+audioSrc: String// 第三方声音
 ```
 ###另外需要引入 elmenet-ui的css
 ```
