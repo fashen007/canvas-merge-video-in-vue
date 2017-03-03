@@ -1,4 +1,7 @@
 # canvas-merge-video-in-vue
+
+##[demo](https://spademan.github.io/canvas-merge-video-in-vue/#/)
+
 ##一.组件形式使用
 
 ###组件引入方式
