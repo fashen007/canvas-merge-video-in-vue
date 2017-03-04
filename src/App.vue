@@ -1,16 +1,27 @@
 <template>
   <div id="app">
-  <merge-video :autoPlay='autoPlay' :playList='playList' :sounds='sounds' :audioSrc='audioSrc'></merge-video>
+  <merge-video :autoPlay='autoPlay' :playList='playList' :sounds='sounds' :audioSrc='audioSrc' :picOption='picOption'></merge-video>
+  <vue-drr :w='180' :h='180' :rotatable='true' @handleUp="showchange" style='position:absolute'>
+    <img src="./assets/logo.png" alt="" style='width: 100%; height: 100%' id='imge'>
+  </vue-drr>
   </div>
 </template>
 <script>
 import Vue from 'vue'
 import MergeVideo from '../dist/canvasMergeVideo.js'
+import VueDRR from 'vue-drag-resize-rotate-updater'
 Vue.use(MergeVideo)
 export default {
   name: 'app',
+  components: {
+    'vue-drr': VueDRR
+  },
   data () {
     return {
+      picOption: {
+        piMerge: true, // // 是否需要合并图片
+        info: {} // 图片信息
+      },
       autoPlay: true, // 是否自动播放
       playList: [],
       sounds: 50,
@@ -46,6 +57,9 @@ export default {
           position: 135
         }]
       }, 2000)
+    },
+    showchange: function (data) {
+      this.picOption.info = data
     }
   }
 }

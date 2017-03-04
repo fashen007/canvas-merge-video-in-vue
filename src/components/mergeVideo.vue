@@ -1,5 +1,5 @@
 <template>
-  <div class="hello">
+  <div style='overflow: hidden; position: relative;'>
     <template v-for='(list, i) in playList'>
       <video class="video" controls width="270" v-show='i == currentIndex' style='position:absolute; left: 9999px;'>
         <source :src="list.src" type='video/mp4' key='i' >
@@ -20,6 +20,7 @@
           </el-row>
       </div>
     </div>
+    <el-button @click='mergePic' v-if='piMerge' style='margin-top: 20px'>合并图片</el-button>
     <audio :src="audioSrc" preload="auto" style='display: none' id='insertAudio'></audio>
 </div>
 </div>
@@ -36,6 +37,13 @@ var progressInterval = null
 export default {
   name: 'MergeVideo',
   props: {
+    picOption: {
+      type: Object,
+      default: {
+        piMerge: false,
+        info: {}
+      }
+    },
     autoPlay: {
       type: Boolean,
       default: false
@@ -59,6 +67,7 @@ export default {
     let cv = document.getElementById('myCanvas')
     this.canvasInstance = cv.getContext('2d')
     this.audioSrc && this.audioInit()
+    this.imageInterval = null
   },
   data () {
     return {
@@ -316,6 +325,15 @@ export default {
       clearInterval(progressInterval) // 暂停计时
       drawTimerInterval = null
       progressInterval = null
+    },
+    mergePic () {
+      const imge = document.getElementById('imge')
+      console.log('picOption', picOption)
+      window.clearInterval(this.imageInterval)
+      this.imageInterval = window.setInterval(() => {
+        this.canvasInstance.drawImage(imge, x, x, w, h)
+      }, 20)
+
     }
   }
 }
