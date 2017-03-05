@@ -1,9 +1,14 @@
 <template>
   <div id="app">
   <merge-video :autoPlay='autoPlay' :playList='playList' :sounds='sounds' :audioSrc='audioSrc' :picOption='picOption'></merge-video>
-  <vue-drr :w='180' :h='180' :rotatable='true' @handleUp="showchange" style='position:absolute'>
-    <img src="./assets/logo.png" alt="" style='width: 100%; height: 100%' id='imge'>
-  </vue-drr>
+  <div class="pic-adjust">
+    <h2>图片调整区域</h2>
+    <div class="wrap">
+      <vue-drr :w='180' :h='180' :rotatable='true' @handleUp="showchange" style='position:absolute'>
+        <img src="./assets/logo.png" alt="" style='width: 100%; height: 100%' id='images'>
+      </vue-drr>
+    </div>
+  </div>
   </div>
 </template>
 <script>
@@ -73,5 +78,15 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+.pic-adjust {
+  position: relative;
+  overflow: hidden;
+  width: 404px;
+  margin: 0 auto;
+}
+.pic-adjust .wrap {
+  border: 1px solid #999;
+  height: 202px;
 }
 </style>

@@ -7,6 +7,7 @@
     </template>
     <div class='video-cont' v-loading="loading">
       <canvas controls id="myCanvas" width='400'height='200'style="border:1px solid #d3d3d3;">Your browser does not support the HTML5 canvas tag.</canvas>
+      <canvas controls id="picCanvas">Your browser does not support the HTML5 canvas tag.</canvas>
       <div class='controls'>
           <el-row :gutter="5" class='row'>
             <el-col :span="3"><div class="grid-content bg-purple"></div><el-button size="mini" @click.native='clickTrigger'>{{videoPauseing ? '开始': '暂停'}}</el-button></el-col>
@@ -20,7 +21,10 @@
           </el-row>
       </div>
     </div>
-    <el-button @click='mergePic' v-if='piMerge' style='margin-top: 20px'>合并图片</el-button>
+    <template v-if='picOption.piMerge'>
+
+      <el-button @click='mergePic' style='margin-top: 20px'>合并图片</el-button>
+    </template>
     <audio :src="audioSrc" preload="auto" style='display: none' id='insertAudio'></audio>
 </div>
 </div>
@@ -64,8 +68,10 @@ export default {
   mounted () {
     this.progressSetTimeout = null
     this.hasPlayTime = 0
-    let cv = document.getElementById('myCanvas')
-    this.canvasInstance = cv.getContext('2d')
+    this.cv = document.getElementById('myCanvas')
+    this.canvasInstance = this.cv.getContext('2d')
+    this.picCanvas = document.getElementById('picCanvas')
+    this.picContext = this.picCanvas.getContext('2d')
     this.audioSrc && this.audioInit()
     this.imageInterval = null
   },
@@ -83,7 +89,8 @@ export default {
       audioPlaying: false, // 音频播放状态
       mutedable: false, // 是否静音
       videoInstance: null, // 当前激活的视频实例
-      canvasInstance: null // canvas 实
+      canvasInstance: null, // canvas 实例
+      mergePicToVideo: false // 是否需要合并图片到视频上面
     }
   },
   watch: {
@@ -113,6 +120,9 @@ export default {
         this.loading = false
         this.hasPlayTime = this.hasPlayTime + (diff > 0 ? (diff > 0.02 ? 0.02 : diff) : 0)
         this.canvasInstance.drawImage(this.videoInstance, 0, 0, 400, 200)
+        if (this.mergePicToVideo) {
+          this.canvasInstance.drawImage(this.picCanvas, 0, 0, 400, 200)
+        }
         that.progressSetTimeout = window.setTimeout(() => {
           that.currentTimeLabel = that.durationFormat(Math.floor(this.hasPlayTime))
         }, 1000)  // 一秒钟更新一次
@@ -327,13 +337,18 @@ export default {
       progressInterval = null
     },
     mergePic () {
-      const imge = document.getElementById('imge')
-      console.log('picOption', picOption)
-      window.clearInterval(this.imageInterval)
-      this.imageInterval = window.setInterval(() => {
-        this.canvasInstance.drawImage(imge, x, x, w, h)
-      }, 20)
-
+      this.rotateAndPaintImage ()
+      this.mergePicToVideo = true
+      console.log(this.picOption.info)
+    },
+    rotateAndPaintImage () {
+      const images = document.getElementById('images')
+      this.picContext.clearRect(0, 0, 400, 200);
+      this.picContext.translate(this.picOption.info.w, this.spicOption.info.h);
+      this.picContext.rotate(this.picOption.info.r*Math.PI/180)
+      this.picContext.drawImage(images, -this.picOption.info.x, -this.picOption.info.y, this.picOption.info.w, this.picOption.info.h)
+      this.picContext.rotate(-this.picOption.info.r);
+      this.picContext.translate(-this.picOption.info.w, -this.picOption.info.h);
     }
   }
 }
