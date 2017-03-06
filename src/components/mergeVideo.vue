@@ -7,7 +7,6 @@
     </template>
     <div class='video-cont' v-loading="loading">
       <canvas controls id="myCanvas" width='400'height='200'style="border:1px solid #d3d3d3;">Your browser does not support the HTML5 canvas tag.</canvas>
-      <canvas controls id="picCanvas">Your browser does not support the HTML5 canvas tag.</canvas>
       <div class='controls'>
           <el-row :gutter="5" class='row'>
             <el-col :span="3"><div class="grid-content bg-purple"></div><el-button size="mini" @click.native='clickTrigger'>{{videoPauseing ? '开始': '暂停'}}</el-button></el-col>
@@ -22,7 +21,9 @@
       </div>
     </div>
     <template v-if='picOption.piMerge'>
-
+      <div class="">
+        <canvas controls id="picCanvas" width='400'height='200'>Your browser does not support the HTML5 canvas tag.</canvas>
+      </div>
       <el-button @click='mergePic' style='margin-top: 20px'>合并图片</el-button>
     </template>
     <audio :src="audioSrc" preload="auto" style='display: none' id='insertAudio'></audio>
@@ -121,7 +122,7 @@ export default {
         this.hasPlayTime = this.hasPlayTime + (diff > 0 ? (diff > 0.02 ? 0.02 : diff) : 0)
         this.canvasInstance.drawImage(this.videoInstance, 0, 0, 400, 200)
         if (this.mergePicToVideo) {
-          this.canvasInstance.drawImage(this.picCanvas, 0, 0, 400, 200)
+          this.canvasInstance.drawImage(this.picCanvas, 0, 0, this.picOption.info.w, this.picOption.info.h)
         }
         that.progressSetTimeout = window.setTimeout(() => {
           that.currentTimeLabel = that.durationFormat(Math.floor(this.hasPlayTime))
@@ -343,12 +344,14 @@ export default {
     },
     rotateAndPaintImage () {
       const images = document.getElementById('images')
+      this.picContext.save();
       this.picContext.clearRect(0, 0, 400, 200);
-      this.picContext.translate(this.picOption.info.w, this.spicOption.info.h);
+      console.log('this.picOption.info', this.picOption.info)
+      this.picContext.translate(this.picOption.info.x, this.picOption.info.y);
       this.picContext.rotate(this.picOption.info.r*Math.PI/180)
-      this.picContext.drawImage(images, -this.picOption.info.x, -this.picOption.info.y, this.picOption.info.w, this.picOption.info.h)
-      this.picContext.rotate(-this.picOption.info.r);
-      this.picContext.translate(-this.picOption.info.w, -this.picOption.info.h);
+      this.picContext.drawImage(images, this.picOption.info.x, this.picOption.info.y, this.picOption.info.w, this.picOption.info.h)
+      // this.picContext.translate(-this.picOption.info.x, -this.picOption.info.y);
+      this.picContext.restore();
     }
   }
 }
