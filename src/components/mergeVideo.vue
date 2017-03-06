@@ -20,11 +20,19 @@
           </el-row>
       </div>
     </div>
-    <template v-if='picOption.piMerge'>
-      <div class="">
-        <canvas controls id="picCanvas" width='400'height='200'>Your browser does not support the HTML5 canvas tag.</canvas>
-      </div>
+    <div class="">
+      <canvas controls id="picCanvas" width='400'height='200' style='display: none'>Your browser does not support the HTML5 canvas tag.</canvas>
+    </div>
+    <template v-show='picOption.editLogo'>
       <el-button @click='mergePic' style='margin-top: 20px'>合并图片</el-button>
+      <div class="pic-adjust">
+        <h2>图片调整区域</h2>
+        <div class="wrap">
+          <vue-drr :bounds='{parent:true}' :w='180' :h='180' :rotatable='true' @handleUp="showchange" style='position:absolute'>
+            <img :src="picOption.logoSrc" alt="" style='width: 100%; height: 100%' id='logo'>
+          </vue-drr>
+        </div>
+      </div>
     </template>
     <audio :src="audioSrc" preload="auto" style='display: none' id='insertAudio'></audio>
 </div>
@@ -37,16 +45,21 @@ import moment from 'moment'
 require('moment-duration-format')
 import Element from 'element-ui'
 Vue.use(Element)
+import VueDRR from 'vue-drag-resize-rotate-updater'
 var drawTimerInterval = null
 var progressInterval = null
 export default {
   name: 'MergeVideo',
+  components: {
+    'vue-drr': VueDRR
+  },
   props: {
     picOption: {
       type: Object,
       default: {
-        piMerge: false,
-        info: {}
+        editLogo: false,
+        info: {},
+        logoSrc: ''
       }
     },
     autoPlay: {
@@ -108,8 +121,6 @@ export default {
     },
     // currentEnoughToPlay之后 触发一次播放
     currentEnoughToPlay: function (newVal, oldVal) {
-      console.log('canplay更改触发')
-      console.log('newval', newVal)
       if (newVal && newVal != oldVal) {
         this.triggerPlay()
       }
@@ -122,7 +133,7 @@ export default {
         this.hasPlayTime = this.hasPlayTime + (diff > 0 ? (diff > 0.02 ? 0.02 : diff) : 0)
         this.canvasInstance.drawImage(this.videoInstance, 0, 0, 400, 200)
         if (this.mergePicToVideo) {
-          this.canvasInstance.drawImage(this.picCanvas, 0, 0, this.picOption.info.w, this.picOption.info.h)
+          this.canvasInstance.drawImage(this.picCanvas, 0, 0, 400, 200)
         }
         that.progressSetTimeout = window.setTimeout(() => {
           that.currentTimeLabel = that.durationFormat(Math.floor(this.hasPlayTime))
@@ -170,6 +181,9 @@ export default {
     },
     // 视频canplay监听回调
     videoCanplayHandle () {
+      if (this.picOption.logoSrc) {
+        this.mergePic()
+      }
       // this.currentEnoughToPlay = true
       this.playList[this.currentIndex].enoughToPlay = true
       this.clickTrigger()
@@ -340,18 +354,27 @@ export default {
     mergePic () {
       this.rotateAndPaintImage ()
       this.mergePicToVideo = true
-      console.log(this.picOption.info)
     },
     rotateAndPaintImage () {
-      const images = document.getElementById('images')
+      const logo = document.getElementById('logo')
+      const drawX = this.picOption.info.r == 0 ? this.picOption.info.x : (Math.round(Math.abs(this.picOption.info.r)) == 180 ? -this.picOption.info.x : 0)
+      const drawY = this.picOption.info.r == 0 ? this.picOption.info.y : (Math.round(Math.abs(this.picOption.info.r)) == 180 ? -this.picOption.info.y : 0)
       this.picContext.save();
       this.picContext.clearRect(0, 0, 400, 200);
-      console.log('this.picOption.info', this.picOption.info)
-      this.picContext.translate(this.picOption.info.x, this.picOption.info.y);
+      if (this.picOption.info.r && Math.round(Math.abs(this.picOption.info.r)) != 180) {
+        this.picContext.translate(this.picOption.info.x, this.picOption.info.y)
+      } else {
+        this.picContext.translate(this.picOption.info.w/2, this.picOption.info.h/2);
+      }
       this.picContext.rotate(this.picOption.info.r*Math.PI/180)
-      this.picContext.drawImage(images, this.picOption.info.x, this.picOption.info.y, this.picOption.info.w, this.picOption.info.h)
-      // this.picContext.translate(-this.picOption.info.x, -this.picOption.info.y);
+      if (!this.picOption.info.r || Math.round(Math.abs(this.picOption.info.r)) == 180) {
+        this.picContext.translate(-this.picOption.info.w/2, -this.picOption.info.h/2);
+      }
+      logo && this.picContext.drawImage(logo, drawX, drawY, this.picOption.info.w, this.picOption.info.h)
       this.picContext.restore();
+    },
+    showchange (data) {
+      this.picOption.info = data
     }
   }
 }
