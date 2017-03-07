@@ -23,17 +23,17 @@
     <div class="">
       <canvas controls id="picCanvas" width='400'height='200' style='display: none'>Your browser does not support the HTML5 canvas tag.</canvas>
     </div>
-    <template v-show='picOption.editLogo'>
-      <el-button @click='mergePic' style='margin-top: 20px'>合并图片</el-button>
+    <div v-show='picOption.editLogo'>
+      <el-button @click='mergePic' style='margin-top: 20px' id='printLogo'>打水印</el-button>
       <div class="pic-adjust">
         <h2>图片调整区域</h2>
         <div class="wrap">
-          <vue-drr :bounds='{parent:true}' :w='180' :h='180' :rotatable='true' @handleUp="showchange" style='position:absolute'>
+          <vue-drr :bounds='{parent:true}' :w='picOption.w' :h='picOption.h' :rotatable='true' @handleUp="showchange" style='position:absolute'>
             <img :src="picOption.logoSrc" alt="" style='width: 100%; height: 100%' id='logo'>
           </vue-drr>
         </div>
       </div>
-    </template>
+    </div>
     <audio :src="audioSrc" preload="auto" style='display: none' id='insertAudio'></audio>
 </div>
 </div>
@@ -58,7 +58,13 @@ export default {
       type: Object,
       default: {
         editLogo: false,
-        info: {},
+        info: {
+          r: 0,
+          h: 100,
+          w: 100,
+          x: 0,
+          y: 0
+        },
         logoSrc: ''
       }
     },
@@ -161,6 +167,9 @@ export default {
       this.videoPauseing = false
       this.drawStart()
       this.audioInstance.play()
+      if (this.picOption.logoSrc) {
+        this.mergePic()
+      }
     },
     // 视频pause监听回调
     videoPauseHandle () {
@@ -181,9 +190,6 @@ export default {
     },
     // 视频canplay监听回调
     videoCanplayHandle () {
-      if (this.picOption.logoSrc) {
-        this.mergePic()
-      }
       // this.currentEnoughToPlay = true
       this.playList[this.currentIndex].enoughToPlay = true
       this.clickTrigger()

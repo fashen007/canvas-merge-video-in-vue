@@ -12,9 +12,12 @@ export default {
   data () {
     return {
       picOption: {
-        editLogo: true, // // 是否需要调整logo
+        editLogo: false, // // 是否需要调整logo
         logoSrc: require('./assets/logo.png'),
-        info: {} // 图片信息
+        info: {
+          w: 60,
+          h: 60
+        } // 图片信息
       },
       autoPlay: true, // 是否自动播放
       playList: [],

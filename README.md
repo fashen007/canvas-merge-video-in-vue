@@ -30,6 +30,17 @@ autoPlay: false, // 是否自动播放 Boolean(required)
 playList: [] // 碎片列表 Array（）
 sounds: Number// 声音 Number（非必填）
 audioSrc: String// 第三方声音（必填）
+
+picOption: { // 水印配置
+  editLogo: false, // // 是否需要调整水印
+  logoSrc: require('./assets/logo.png'), //水印地址
+  info: {
+    w: 60, // 宽
+    h: 60, // 高
+    x: 0 // logo相对画布x轴起点
+    y: 0 // logo相对画布y轴起点
+  }
+},
 ```
 ###另外需要引入 elmenet-ui的css
 ```
