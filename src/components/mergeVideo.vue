@@ -110,7 +110,7 @@ export default {
       mutedable: false, // 是否静音
       videoInstance: null, // 当前激活的视频实例
       canvasInstance: null, // canvas 实例
-      mergePicToVideo: false // 是否需要合并图片到视频上面
+      mergePicToVideo: false // 是否需要打水印
     }
   },
   watch: {
@@ -364,6 +364,7 @@ export default {
     },
     rotateAndPaintImage () {
       const logo = document.getElementById('logo')
+      console.log('this.picOption.info', this.picOption.info)
       const drawX = this.picOption.info.r == 0 ? this.picOption.info.x : (Math.round(Math.abs(this.picOption.info.r)) == 180 ? -this.picOption.info.x : 0)
       const drawY = this.picOption.info.r == 0 ? this.picOption.info.y : (Math.round(Math.abs(this.picOption.info.r)) == 180 ? -this.picOption.info.y : 0)
       this.picContext.save();

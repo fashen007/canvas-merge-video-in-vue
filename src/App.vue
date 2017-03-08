@@ -12,7 +12,7 @@ export default {
   data () {
     return {
       picOption: {
-        editLogo: false, // // 是否需要调整logo
+        editLogo: true, // // 是否需要调整水印
         logoSrc: require('./assets/logo.png'),
         info: {
           w: 60,
