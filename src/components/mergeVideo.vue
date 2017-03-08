@@ -167,6 +167,7 @@ export default {
       this.videoPauseing = false
       this.drawStart()
       this.audioInstance.play()
+      console.log('播放')
       if (this.picOption.logoSrc) {
         this.mergePic()
       }
