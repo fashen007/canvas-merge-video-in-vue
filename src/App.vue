@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-  <merge-video :autoPlay='autoPlay' :playList='playList' :sounds='sounds' :audioSrc='audioSrc'></merge-video>
+  <merge-video :autoPlay='autoPlay' :playList='playList' :sounds='sounds' :audioSrc='audioSrc' :picOption='picOption'></merge-video>
   </div>
 </template>
 <script>
@@ -11,9 +11,17 @@ export default {
   name: 'app',
   data () {
     return {
+      picOption: {
+        editLogo: true, // // 是否需要调整水印
+        logoSrc: require('./assets/logo.png'),
+        info: {
+          w: 60,
+          h: 60
+        } // 图片信息
+      },
       autoPlay: true, // 是否自动播放
       playList: [],
-      sounds: 50,
+      sounds: 0,
       audioSrc: 'http://m2.music.126.net/kP1oR0-NH0NGJpLIBzDUmQ==/3413983646810312.mp3'
     }
   },
@@ -59,5 +67,16 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+.pic-adjust {
+  overflow: hidden;
+  width: 404px;
+  margin: 0 auto;
+}
+.pic-adjust .wrap {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #999;
+  height: 202px;
 }
 </style>

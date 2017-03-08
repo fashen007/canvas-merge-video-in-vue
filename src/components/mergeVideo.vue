@@ -1,5 +1,5 @@
 <template>
-  <div class="hello">
+  <div style='overflow: hidden; position: relative;'>
     <template v-for='(list, i) in playList'>
       <video class="video" controls width="270" v-show='i == currentIndex' style='position:absolute; left: 9999px;'>
         <source :src="list.src" type='video/mp4' key='i' >
@@ -20,6 +20,20 @@
           </el-row>
       </div>
     </div>
+    <div class="">
+      <canvas controls id="picCanvas" width='400'height='200' style='display: none'>Your browser does not support the HTML5 canvas tag.</canvas>
+    </div>
+    <div v-show='picOption.editLogo'>
+      <el-button @click='mergePic' style='margin-top: 20px' id='printLogo'>打水印</el-button>
+      <div class="pic-adjust">
+        <h2>图片调整区域</h2>
+        <div class="wrap">
+          <vue-drr :bounds='{parent:true}' :w='picOption.w' :h='picOption.h' :rotatable='true' @handleUp="showchange" style='position:absolute'>
+            <img :src="picOption.logoSrc" alt="" style='width: 100%; height: 100%' id='logo'>
+          </vue-drr>
+        </div>
+      </div>
+    </div>
     <audio :src="audioSrc" preload="auto" style='display: none' id='insertAudio'></audio>
 </div>
 </div>
@@ -31,11 +45,29 @@ import moment from 'moment'
 require('moment-duration-format')
 import Element from 'element-ui'
 Vue.use(Element)
+import VueDRR from 'vue-drag-resize-rotate-updater'
 var drawTimerInterval = null
 var progressInterval = null
 export default {
   name: 'MergeVideo',
+  components: {
+    'vue-drr': VueDRR
+  },
   props: {
+    picOption: {
+      type: Object,
+      default: {
+        editLogo: false,
+        info: {
+          r: 0,
+          h: 100,
+          w: 100,
+          x: 0,
+          y: 0
+        },
+        logoSrc: ''
+      }
+    },
     autoPlay: {
       type: Boolean,
       default: false
@@ -56,9 +88,12 @@ export default {
   mounted () {
     this.progressSetTimeout = null
     this.hasPlayTime = 0
-    let cv = document.getElementById('myCanvas')
-    this.canvasInstance = cv.getContext('2d')
+    this.cv = document.getElementById('myCanvas')
+    this.canvasInstance = this.cv.getContext('2d')
+    this.picCanvas = document.getElementById('picCanvas')
+    this.picContext = this.picCanvas.getContext('2d')
     this.audioSrc && this.audioInit()
+    this.imageInterval = null
   },
   data () {
     return {
@@ -74,7 +109,8 @@ export default {
       audioPlaying: false, // 音频播放状态
       mutedable: false, // 是否静音
       videoInstance: null, // 当前激活的视频实例
-      canvasInstance: null // canvas 实
+      canvasInstance: null, // canvas 实例
+      mergePicToVideo: false // 是否需要打水印
     }
   },
   watch: {
@@ -91,8 +127,6 @@ export default {
     },
     // currentEnoughToPlay之后 触发一次播放
     currentEnoughToPlay: function (newVal, oldVal) {
-      console.log('canplay更改触发')
-      console.log('newval', newVal)
       if (newVal && newVal != oldVal) {
         this.triggerPlay()
       }
@@ -104,6 +138,9 @@ export default {
         this.loading = false
         this.hasPlayTime = this.hasPlayTime + (diff > 0 ? (diff > 0.02 ? 0.02 : diff) : 0)
         this.canvasInstance.drawImage(this.videoInstance, 0, 0, 400, 200)
+        if (this.mergePicToVideo) {
+          this.canvasInstance.drawImage(this.picCanvas, 0, 0, 400, 200)
+        }
         that.progressSetTimeout = window.setTimeout(() => {
           that.currentTimeLabel = that.durationFormat(Math.floor(this.hasPlayTime))
         }, 1000)  // 一秒钟更新一次
@@ -130,6 +167,10 @@ export default {
       this.videoPauseing = false
       this.drawStart()
       this.audioInstance.play()
+      console.log('播放')
+      if (this.picOption.logoSrc) {
+        this.mergePic()
+      }
     },
     // 视频pause监听回调
     videoPauseHandle () {
@@ -316,6 +357,32 @@ export default {
       clearInterval(progressInterval) // 暂停计时
       drawTimerInterval = null
       progressInterval = null
+    },
+    mergePic () {
+      this.rotateAndPaintImage ()
+      this.mergePicToVideo = true
+    },
+    rotateAndPaintImage () {
+      const logo = document.getElementById('logo')
+      console.log('this.picOption.info', this.picOption.info)
+      const drawX = this.picOption.info.r == 0 ? this.picOption.info.x : (Math.round(Math.abs(this.picOption.info.r)) == 180 ? -this.picOption.info.x : 0)
+      const drawY = this.picOption.info.r == 0 ? this.picOption.info.y : (Math.round(Math.abs(this.picOption.info.r)) == 180 ? -this.picOption.info.y : 0)
+      this.picContext.save();
+      this.picContext.clearRect(0, 0, 400, 200);
+      if (this.picOption.info.r && Math.round(Math.abs(this.picOption.info.r)) != 180) {
+        this.picContext.translate(this.picOption.info.x, this.picOption.info.y)
+      } else {
+        this.picContext.translate(this.picOption.info.w/2, this.picOption.info.h/2);
+      }
+      this.picContext.rotate(this.picOption.info.r*Math.PI/180)
+      if (!this.picOption.info.r || Math.round(Math.abs(this.picOption.info.r)) == 180) {
+        this.picContext.translate(-this.picOption.info.w/2, -this.picOption.info.h/2);
+      }
+      logo && this.picContext.drawImage(logo, drawX, drawY, this.picOption.info.w, this.picOption.info.h)
+      this.picContext.restore();
+    },
+    showchange (data) {
+      this.picOption.info = data
     }
   }
 }
