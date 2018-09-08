@@ -117,4 +117,5 @@ canvasInstance: null // canvas 实
 
 2.兼容性问题
 
-3.。
+### 参考
+https://www.w3.org/2010/05/video/mediaevents.html
