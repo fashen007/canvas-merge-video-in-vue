@@ -6,6 +6,7 @@
 <script>
 import Vue from 'vue'
 import MergeVideo from '../dist/canvasMergeVideo.js'
+// import MergeVideo from 'components/mergeVideo'
 Vue.use(MergeVideo)
 export default {
   name: 'app',
@@ -25,6 +26,9 @@ export default {
       audioSrc: 'http://m2.music.126.net/kP1oR0-NH0NGJpLIBzDUmQ==/3413983646810312.mp3'
     }
   },
+  // components: {
+  //   MergeVideo
+  // },
   mounted: function () {
     this.getData()
   },
@@ -33,27 +37,27 @@ export default {
       const that = this
       setTimeout(() => {
         that.playList = [{
-          src: 'http://www.w3school.com.cn/example/html5/mov_bbb.mp4',
-          duration: 10, // 长度
+          src: 'https://img.kuaizi.co/vid/8/3e/3ed1b8730870af30b2348f52adbc7076.mp4',
+          duration: 2, // 长度
           position: 0 // 视屏在所有碎片视频长度中的开始节点
         }, { // 碎片资源列表  这个是需要后端返回的
-          src: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
-          duration: 52, // 长度
-          position: 11 // 节点
+          src: 'https://img.kuaizi.co/vid/8/fc/fc5032b1580232a1f86276601de2129d.mp4',
+          duration: 1, // 长度
+          position: 2 // 节点
         }, {
-          src: 'https://www.w3schools.com/html/movie.mp4',
-          duration: 12,
-          position: 63
+          src: 'https://img.kuaizi.co/vid/8/f1/f116e8750658890deb194a1647c3b31d.mp4',
+          duration: 1,
+          position: 3
         }, {
-          src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4',
-          duration: 60,
-          position: 75
+          src: 'https://img.kuaizi.co/vid/8/a6/a6160efceabdbde053cb9bc0dcca339c.mp4',
+          duration: 2,
+          position: 5
         }, {
-          src: 'http://godsong.bs2dl.yy.com/dmZlNTY3Y2VjZWRlNDM3NGM4MzNkZGE3OGJmYTJhYTVkMTIwMjY0NDI1N21j',
-          duration: 50,
-          position: 135
+          src: 'https://img.kuaizi.co/vid/8/53/532b008e011876c6b8eff771ba773915.mp4',
+          duration: 2,
+          position: 7
         }]
-      }, 2000)
+      }, 1000)
     }
   }
 }

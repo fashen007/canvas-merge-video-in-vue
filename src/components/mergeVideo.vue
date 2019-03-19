@@ -6,22 +6,28 @@
       </video>
     </template>
     <div class='video-cont' v-loading="loading">
-      <canvas controls id="myCanvas" width='400'height='200'style="border:1px solid #d3d3d3;">Your browser does not support the HTML5 canvas tag.</canvas>
+      <canvas controls id="myCanvas" width='400' height='200' style="border:1px solid #d3d3d3;">Your browser does not support the HTML5 canvas tag.</canvas>
       <div class='controls'>
           <el-row :gutter="5" class='row'>
             <el-col :span="3"><div class="grid-content bg-purple"></div><el-button size="mini" @click.native='clickTrigger'>{{videoPauseing ? '开始': '暂停'}}</el-button></el-col>
             <el-col :span="7" class='time-duration'><div class="grid-content bg-purple">{{currentTimeLabel}}/{{terminalTimeLabel}}</div></el-col>
-            <el-col :span="10"><div class="grid-content bg-purple"><el-slider @change='progressDrag' v-model="progress" :max='allLength'></el-slider></div></el-col>
-            <el-col :span="4">
+            <el-col :span="8"><div class="grid-content bg-purple"><el-slider @change='progressDrag' v-model="progress" :max='allLength'></el-slider></div></el-col>
+            <el-col :span="6">
               <div class="grid-content bg-purple">
-                 <span class='sound-contr'> <span class='sound-icon' @click='triggerSound'>{{mutedable ? '声音' : '静音'}}</span><input type="range" name="" v-model="sounds" orient="vertical"></span>
+                <span class='sound-contr'> 
+                  <span class='sound-icon' @click='triggerSound'>{{mutedable ? '声音' : '静音'}}</span>
+                  <input type="range" name="" v-model="sounds" orient="vertical">
+                  </span>
+                <span class='sound-contr'> 
+                   <span class='sound-icon' @click='triggerScreen'>{{isFullscreen ? '取消全屏' : '全屏'}}</span>
+                </span>
               </div>
             </el-col>
           </el-row>
       </div>
     </div>
     <div class="">
-      <canvas controls id="picCanvas" width='400'height='200' style='display: none'>Your browser does not support the HTML5 canvas tag.</canvas>
+      <canvas controls id="picCanvas" width='400' height='200' style='display: none'>Your browser does not support the HTML5 canvas tag.</canvas>
     </div>
     <div v-show='picOption.editLogo'>
       <el-button @click='mergePic' style='margin-top: 20px' id='printLogo'>打水印</el-button>
@@ -44,6 +50,7 @@ import Vue from 'vue'
 import moment from 'moment'
 require('moment-duration-format')
 import Element from 'element-ui'
+import screenfull from 'screenfull'
 Vue.use(Element)
 import VueDRR from 'vue-drag-resize-rotate-updater'
 var drawTimerInterval = null
@@ -97,6 +104,7 @@ export default {
   },
   data () {
     return {
+      isFullscreen: false, // 全屏
       progress: 0, // 进度条
       allLength: 0, // 总长度.这个是需要后端返回的
       currentTimeLabel: '0:00', // 默认播放时间 用来显示
@@ -337,7 +345,17 @@ export default {
       if (this.audioSrc) { // 如果存在插入音频 视频的音量设置为零
         this.audioInstance.muted = this.mutedable
       } else {
-         this.videoInstance.muted = this.mutedable
+        this.videoInstance.muted = this.mutedable
+      }
+    },
+    // 全屏
+    triggerScreen () {
+      let canvas = document.getElementById('myCanvas')
+      if (screenfull.enabled) {
+        screenfull.toggle(canvas)
+        this.isFullscreen = !this.isFullscreen
+      } else {
+        this.isFullscreen = false
       }
     },
     videoPreLoad () {
@@ -359,7 +377,7 @@ export default {
       progressInterval = null
     },
     mergePic () {
-      this.rotateAndPaintImage ()
+      this.rotateAndPaintImage()
       this.mergePicToVideo = true
     },
     rotateAndPaintImage () {
@@ -367,19 +385,19 @@ export default {
       console.log('this.picOption.info', this.picOption.info)
       const drawX = this.picOption.info.r == 0 ? this.picOption.info.x : (Math.round(Math.abs(this.picOption.info.r)) == 180 ? -this.picOption.info.x : 0)
       const drawY = this.picOption.info.r == 0 ? this.picOption.info.y : (Math.round(Math.abs(this.picOption.info.r)) == 180 ? -this.picOption.info.y : 0)
-      this.picContext.save();
-      this.picContext.clearRect(0, 0, 400, 200);
+      this.picContext.save()
+      this.picContext.clearRect(0, 0, 400, 200)
       if (this.picOption.info.r && Math.round(Math.abs(this.picOption.info.r)) != 180) {
         this.picContext.translate(this.picOption.info.x, this.picOption.info.y)
       } else {
-        this.picContext.translate(this.picOption.info.w/2, this.picOption.info.h/2);
+        this.picContext.translate(this.picOption.info.w / 2, this.picOption.info.h / 2)
       }
-      this.picContext.rotate(this.picOption.info.r*Math.PI/180)
+      this.picContext.rotate(this.picOption.info.r * Math.PI / 180)
       if (!this.picOption.info.r || Math.round(Math.abs(this.picOption.info.r)) == 180) {
-        this.picContext.translate(-this.picOption.info.w/2, -this.picOption.info.h/2);
+        this.picContext.translate(-this.picOption.info.w / 2, -this.picOption.info.h / 2)
       }
       logo && this.picContext.drawImage(logo, drawX, drawY, this.picOption.info.w, this.picOption.info.h)
-      this.picContext.restore();
+      this.picContext.restore()
     },
     showchange (data) {
       this.picOption.info = data
