@@ -117,5 +117,7 @@ canvasInstance: null // canvas 实
 
 2.兼容性问题
 
+3.移动端播放全屏有兼容性问题
+
 ### 参考
 https://www.w3.org/2010/05/video/mediaevents.html
