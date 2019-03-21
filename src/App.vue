@@ -1,34 +1,36 @@
 <template>
   <div id="app">
-  <merge-video :autoPlay='autoPlay' :playList='playList' :sounds='sounds' :audioSrc='audioSrc' :picOption='picOption'></merge-video>
+  <merge-video :autoPlay='autoPlay' :playList='playList' :sounds='sounds' :showSounds='showSounds' :audioSrc='audioSrc' :picOption='picOption'></merge-video>
   </div>
 </template>
 <script>
-import Vue from 'vue'
-import MergeVideo from '../dist/canvasMergeVideo.js'
-// import MergeVideo from 'components/mergeVideo'
-Vue.use(MergeVideo)
+// import Vue from 'vue'
+// import MergeVideo from '../dist/canvasMergeVideo.js'
+import MergeVideo from 'components/mergeVideo'
+// Vue.use(MergeVideo)
 export default {
   name: 'app',
   data () {
     return {
       picOption: {
-        editLogo: true, // // 是否需要调整水印
+        editLogo: false, // // 是否需要调整水印
         logoSrc: require('./assets/logo.png'),
         info: {
           w: 60,
           h: 60
         } // 图片信息
       },
-      autoPlay: true, // 是否自动播放
+      showContr: true,
+      autoPlay: false, // 是否自动播放
+      showSounds: false, // 是否展示音频控制
       playList: [],
       sounds: 0,
       audioSrc: 'http://m2.music.126.net/kP1oR0-NH0NGJpLIBzDUmQ==/3413983646810312.mp3'
     }
   },
-  // components: {
-  //   MergeVideo
-  // },
+  components: {
+    MergeVideo
+  },
   mounted: function () {
     this.getData()
   },
