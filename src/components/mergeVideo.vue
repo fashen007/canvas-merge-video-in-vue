@@ -3,7 +3,7 @@
     <video class="video" preload='auto' width="270" style='display: none' v-for="(video, index) in playList" :key='index'>
       <source :src="video.src" type='video/mp4'>
     </video>
-    <div class='video-cont' v-loading="loading">
+    <div class='video-cont'>
       <video class="video" :width="width" id='my-video' style="display: none" playsinline webkit-playsinline>
         <source :src="playList[0] ? playList[0].src : ''" type='video/mp4'>
       </video>
@@ -14,31 +14,22 @@
       </div>
       <video-control v-if='showContr' :time='hasPlayTime' :endTime='endTime' @dragProgress='dragProgress' :showSounds='showSounds'></video-control>
     </div>
-    <!-- <water-mark v-if='picOption.editLogo' :picOption='picOption' :currentTime='currentTime' :drawInstance='canvasInstance'> </water-mark> -->
     <audio :src="audioSrc" preload="auto" style='display: none' id='insertAudio'></audio>
 </div>
 </template>
 
 <script>
 import videoControl from './video-control.vue'
-import waterMark from './water-mark.vue'
 import screenfull from 'screenfull'
-import VideoToCanvas from './canvasPlayer.js'
+import VideoPlayer from './video-player.js'
 var drawTimerInterval = null
 var progressInterval = null
 export default {
   name: 'MergeVideo',
   components: {
-    videoControl,
-    waterMark
+    videoControl
   },
   props: {
-    picOption: {
-      type: Object,
-      default: {
-        editLogo: true
-      }
-    },
     autoPlay: {
       type: Boolean,
       default: false
@@ -77,7 +68,6 @@ export default {
     this.progressSetTimeout = null
     this.hasPlayTime = 0
     // this.cv = document.getElementById('myCanvas')
-    // this.canvasInstance = this.cv.getContext('2d')
     this.audioSrc && this.audioInit()
     this.imageInterval = null
   },
@@ -97,7 +87,6 @@ export default {
       audioPlaying: false, // 音频播放状态
       mutedable: false, // 是否静音
       videoInstance: null, // 当前激活的视频实例
-      // canvasInstance: null, // canvas 实例
       showPlayingIcon: false, // 是否展示播放按钮
       isPlaying: false // 播放状态
     }
@@ -116,13 +105,15 @@ export default {
           this.endTime = this.endTime + item.duration
         })
         // this.terminalTimeLabel = this.durationFormat((this.endTime)) // 格式化所有视频长度
+        this.currentVideoInstance = new VideoPlayer(this.videoInstance, null, {
+          end: this.videoEndedHandle,
+          canplay: this.videoCanplayHandle
+        })
         this.$nextTick(() => {
           // console.log('执行了？')
-          this.videoInit()
-          this.canvasNew = new VideoToCanvas(this.videoInstance, this.cv, {
-            end: this.videoEndedHandle,
-            canplay: this.videoCanplayHandle
-          })
+          // this.videoInit()
+          this.currentVideoInstance.load()
+          console.log('传值进去了呀')
         })
       }
     },
@@ -138,9 +129,7 @@ export default {
         let diff = newVal - oldVal
         this.loading = false
         this.hasPlayTime = this.hasPlayTime + (diff > 0 ? (diff > 0.02 ? 0.02 : diff) : 0)
-        // this.canvasInstance.drawImage(this.videoInstance, 0, 0, 400, 200)
         // if (this.mergePicToVideo && this.picOption.editLogo) {
-        //   this.canvasInstance.drawImage(this.picCanvas, 0, 0, 400, 200)
         // }
         that.progressSetTimeout = window.setTimeout(() => {
           // that.currentTimeLabel = that.durationFormat(Math.floor(this.hasPlayTime))
@@ -180,11 +169,7 @@ export default {
         this.currentIndex ++
         this.$nextTick(() => {
           // this.videoInit()
-          console.log('this.playList[this.currentIndex].src', this.playList[this.currentIndex].src)
-          this.canvasNew.change(this.playList[this.currentIndex].src)
-          // this.videoInstance.src = this.playList[this.currentIndex].src
-          // this.triggerPlay()
-          // this.videoPreLoad()
+          this.currentVideoInstance.change(this.playList[this.currentIndex].src)
         })
       } else {
         this.isPauseing = true
@@ -197,7 +182,7 @@ export default {
       this.playList[this.currentIndex].enoughToPlay = true
       this.loading = false
       // if (this.autoPlay) this.triggerPlay()
-      if (this.autoPlay || this.currentIndex > 0) this.canvasNew.play()
+      if (this.autoPlay || this.currentIndex > 0) this.currentVideoInstance.play()
     },
     // 视频Waiting监听回调
     videoWaitingHandle () {
@@ -209,42 +194,33 @@ export default {
         this.audioInstance.pause()
       }
     },
-    removeListener () {
-      this.videoInstance.removeEventListener('play', this.videoPlayHandle)
-      this.videoInstance.removeEventListener('pause', this.videoPauseHandle)
-      this.videoInstance.removeEventListener('ended', this.videoEndedHandle)
-      this.videoInstance.removeEventListener('canplay', this.videoCanplayHandle)
-      this.videoInstance.removeEventListener('waiting', this.videoWaitingHandle)
-    },
     videoInit () {
-      const that = this
-      // this.videoInstance = document.getElementById('my-video')
-      console.log('this.videoInstance')
-      if (!this.videoInstance) return
-      this.videoInstance.src = this.playList[this.currentIndex].src
-      if (this.audioSrc) { // 如果存在插入音频 视频的音量设置为零
-        this.videoInstance.muted = true
-        this.audioInstance.volume = this.sounds / 100
-        this.mutedable = this.audioInstance.muted
-      } else {
-        this.videoInstance.volume = this.sounds / 100
-        this.mutedable = this.videoInstance.muted
-      }
-      // 避免多次绑定,
-      this.removeListener()
-      // 播放
-      that.videoInstance.addEventListener('play', this.videoPlayHandle, false)
-      // 暂停
-      that.videoInstance.addEventListener('pause', this.videoPauseHandle, false)
-      // 结束
-      this.videoInstance.addEventListener('ended', this.videoEndedHandle, false)
-      // 可以播放
-      this.videoInstance.addEventListener('canplay', this.videoCanplayHandle, false)
-      // waiting了
-      this.videoInstance.addEventListener('waiting', this.videoWaitingHandle, false)
+      // const that = this
+      // // this.videoInstance = document.getElementById('my-video')
+      // console.log('this.videoInstance')
+      // if (!this.videoInstance) return
+      // this.videoInstance.src = this.playList[this.currentIndex].src
+      // if (this.audioSrc) { // 如果存在插入音频 视频的音量设置为零
+      //   this.videoInstance.muted = true
+      //   this.audioInstance.volume = this.sounds / 100
+      //   this.mutedable = this.audioInstance.muted
+      // } else {
+      //   this.videoInstance.volume = this.sounds / 100
+      //   this.mutedable = this.videoInstance.muted
+      // }
+      // // 播放
+      // that.videoInstance.addEventListener('play', this.videoPlayHandle, false)
+      // // 暂停
+      // that.videoInstance.addEventListener('pause', this.videoPauseHandle, false)
+      // // 结束
+      // this.videoInstance.addEventListener('ended', this.videoEndedHandle, false)
+      // // 可以播放
+      // this.videoInstance.addEventListener('canplay', this.videoCanplayHandle, false)
+      // // waiting了
+      // this.videoInstance.addEventListener('waiting', this.videoWaitingHandle, false)
       // 预先加载下一个视频碎片
-      this.videoPreLoad()
-      this.captureFisrt()
+      // this.videoPreLoad()
+      // this.captureFisrt()
     },
     audioInit () {
       this.audioInstance = document.getElementById('insertAudio')
@@ -264,29 +240,16 @@ export default {
     // 绘制首屏视频
     captureFisrt () {
       const that = this
-      console.log('获取第一帧')
       that.videoInstance.addEventListener('loadeddata', function callback () {
         if (that.videoInstance.readyState >= 2) {
-          // that.canvasInstance.drawImage(that.videoInstance, 0, 0, 400, 200)
-          console.log(' that.canvasNew', that.canvasNew)
-          that.canvasNew.drawFrame()
+          that.currentVideoInstance.drawFrame()
           that.videoInstance.removeEventListener('loadeddata', callback)
         }
       })
     },
     // 播放或者暂停
     changeStatus () {
-      // this.isPlaying = !this.isPlaying
-      // this.showPlayingIcon = true
-      // if (!this.isPlaying) {
-      //   this.isPauseing = true
-      //   if (this.audioSrc) {
-      //     this.audioInstance.pause()
-      //   }
-      //   this.videoInstance.pause()
-      // }
-      // this.triggerPlay()
-      this.canvasNew.play()
+      this.currentVideoInstance.play()
     },
     drawStart () {
       const that = this
@@ -302,14 +265,6 @@ export default {
         }, 1000)  // 每1秒画统计一次时间条
       }
     },
-    // /*
-    //   @param ms 秒数
-    // */
-    // durationFormat (ms) {
-    //   // 大过一个小时候的时候 格式化为: h:m:ss
-    //   // 否则不显示小时 只显示 分和秒
-    //   return ms > 3600 ? moment.duration(ms, 'seconds').format('h:m:ss', { trim: false }) : moment.duration(ms, 'seconds').format('m:ss', { trim: false })
-    // },
     dragProgress (val) {
       if (val == Math.floor(this.hasPlayTime)) return // 表示是自动播放过程
       // 拖拽了
@@ -325,48 +280,17 @@ export default {
         if (item.position <= val & val < (item.position + item.duration)) {
           this.hasPlayTime = val
           if (this.currentIndex != i) { // 显示当前的video
-            // this.removeListener()
             this.currentIndex = i
             this.videoInstance.src = this.playList[this.currentIndex].src
             // this.videoInit() // 初始化video实例
           }
           this.videoInstance.currentTime = val - item.position
-          this.triggerPlay()
         }
       })
       if (this.audioSrc) {
         this.audioInstance.currentTime = this.hasPlayTime
       }
       // this.currentTimeLabel = this.durationFormat(this.hasPlayTime)
-    },
-    triggerPlay () {
-      this.clearIntervaler()
-      console.log('this.playList[this.currentIndex].enoughToPlay', this.playList[this.currentIndex].enoughToPlay)
-      console.log('this.currentIndex', this.currentIndex)
-      if (this.playList[this.currentIndex].enoughToPlay) {
-        this.videoInstance.play().catch((e) => {
-          console.log(e)
-        })
-      } else {
-        this.videoInstance.load()
-      }
-      // if (this.videoInstance.readyState == 4) {
-      //   this.videoInstance.play()
-      // } else {
-      //   this.loading = true
-      //   this.videoInstance.load()
-      // }
-      // this.videoInstance.pause()
-      // this.videoInstance.play()
-      // console.log('sss')
-      // window.requestAnimationFrame(() => {
-      //   if (this.videoInstance.readyState == 4) {
-      //     this.videoInstance.play()
-      //   } else {
-      //     this.loading = true
-      //     this.videoInstance.load()
-      //   }
-      // })
     },
     // 全屏
     triggerScreen () {
@@ -398,32 +322,6 @@ export default {
       drawTimerInterval = null
       progressInterval = null
     }
-    // mergePic () {
-    //   this.rotateAndPaintImage()
-    //   this.mergePicToVideo = true
-    // },
-    // rotateAndPaintImage () {
-    //   const logo = document.getElementById('logo')
-    //   console.log('this.picOption.info', this.picOption.info)
-    //   const drawX = this.picOption.info.r == 0 ? this.picOption.info.x : (Math.round(Math.abs(this.picOption.info.r)) == 180 ? -this.picOption.info.x : 0)
-    //   const drawY = this.picOption.info.r == 0 ? this.picOption.info.y : (Math.round(Math.abs(this.picOption.info.r)) == 180 ? -this.picOption.info.y : 0)
-    //   this.picContext.save()
-    //   this.picContext.clearRect(0, 0, 400, 200)
-    //   if (this.picOption.info.r && Math.round(Math.abs(this.picOption.info.r)) != 180) {
-    //     this.picContext.translate(this.picOption.info.x, this.picOption.info.y)
-    //   } else {
-    //     this.picContext.translate(this.picOption.info.w / 2, this.picOption.info.h / 2)
-    //   }
-    //   this.picContext.rotate(this.picOption.info.r * Math.PI / 180)
-    //   if (!this.picOption.info.r || Math.round(Math.abs(this.picOption.info.r)) == 180) {
-    //     this.picContext.translate(-this.picOption.info.w / 2, -this.picOption.info.h / 2)
-    //   }
-    //   logo && this.picContext.drawImage(logo, drawX, drawY, this.picOption.info.w, this.picOption.info.h)
-    //   this.picContext.restore()
-    // },
-    // showchange (data) {
-    //   this.picOption.info = data
-    // }
   }
 }
 </script>
@@ -501,11 +399,5 @@ input[type=range][orient=vertical]{
     width: 8px;
     height:  80px;
     padding: 0 5px;
-}
-</style>
-<style>
-.el-loading-mask {
-  margin-bottom: 36px !important;
-  background-color: #000;
 }
 </style>
