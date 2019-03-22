@@ -25,7 +25,7 @@ export default {
       showSounds: false, // 是否展示音频控制
       playList: [],
       sounds: 0,
-      audioSrc: 'http://m2.music.126.net/kP1oR0-NH0NGJpLIBzDUmQ==/3413983646810312.mp3'
+      audioSrc: ''
     }
   },
   components: {

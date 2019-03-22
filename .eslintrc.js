@@ -23,6 +23,8 @@ module.exports = {
         "x-invalid-end-tag": false
     }
     ],
+    "no-unused-vars": 0,
+    "no-extra-parens": 0,
     "camelcase": 0,
     "arrow-parens": 0,
     "generator-star-spacing": 0,

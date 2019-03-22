@@ -1,9 +1,12 @@
 <template>
   <div style='overflow: hidden; position: relative;'>
-    <video class="video" width="270" style='position:absolute; left: 9999px;'>
+    <video class="video" preload='auto' width="270" style='display: none' v-for="(video, index) in playList" :key='index'>
+      <source :src="video.src" type='video/mp4'>
+    </video>
+    <div class='video-cont' v-loading="loading">
+      <video class="video" :width="width" id='my-video' style="display: none" playsinline webkit-playsinline>
         <source :src="playList[0] ? playList[0].src : ''" type='video/mp4'>
       </video>
-    <div class='video-cont' v-loading="loading">
       <canvas controls id="myCanvas" width='400' height='200' style="border:1px solid #d3d3d3;">Your browser does not support the HTML5 canvas tag.</canvas>
       <div class='play-icon' :class='isPauseing ?   "is-pausing" : "is-playing"' @click="changeStatus">
         <i class='kz-icon-zanting' v-if='isPlaying && showPlayingIcon'></i>
@@ -11,7 +14,7 @@
       </div>
       <video-control v-if='showContr' :time='hasPlayTime' :endTime='endTime' @dragProgress='dragProgress' :showSounds='showSounds'></video-control>
     </div>
-    <water-mark v-if='picOption.editLogo' :picOption='picOption' :currentTime='currentTime' :drawInstance='canvasInstance'> </water-mark>
+    <!-- <water-mark v-if='picOption.editLogo' :picOption='picOption' :currentTime='currentTime' :drawInstance='canvasInstance'> </water-mark> -->
     <audio :src="audioSrc" preload="auto" style='display: none' id='insertAudio'></audio>
 </div>
 </template>
@@ -20,6 +23,7 @@
 import videoControl from './video-control.vue'
 import waterMark from './water-mark.vue'
 import screenfull from 'screenfull'
+import VideoToCanvas from './canvasPlayer.js'
 var drawTimerInterval = null
 var progressInterval = null
 export default {
@@ -43,6 +47,14 @@ export default {
       type: Array,
       default: []
     },
+    width: {
+      type: Number,
+      default: 270
+    },
+    height: {
+      type: Number,
+      default: 0
+    },
     sounds: {
       type: Number,
       default: 20
@@ -61,10 +73,11 @@ export default {
     }
   },
   mounted () {
+    this.videoInstance = document.getElementById('my-video')
     this.progressSetTimeout = null
     this.hasPlayTime = 0
-    this.cv = document.getElementById('myCanvas')
-    this.canvasInstance = this.cv.getContext('2d')
+    // this.cv = document.getElementById('myCanvas')
+    // this.canvasInstance = this.cv.getContext('2d')
     this.audioSrc && this.audioInit()
     this.imageInterval = null
   },
@@ -84,7 +97,7 @@ export default {
       audioPlaying: false, // 音频播放状态
       mutedable: false, // 是否静音
       videoInstance: null, // 当前激活的视频实例
-      canvasInstance: null, // canvas 实例
+      // canvasInstance: null, // canvas 实例
       showPlayingIcon: false, // 是否展示播放按钮
       isPlaying: false // 播放状态
     }
@@ -104,8 +117,12 @@ export default {
         })
         // this.terminalTimeLabel = this.durationFormat((this.endTime)) // 格式化所有视频长度
         this.$nextTick(() => {
-          console.log('执行了？')
+          // console.log('执行了？')
           this.videoInit()
+          this.canvasNew = new VideoToCanvas(this.videoInstance, this.cv, {
+            end: this.videoEndedHandle,
+            canplay: this.videoCanplayHandle
+          })
         })
       }
     },
@@ -121,7 +138,7 @@ export default {
         let diff = newVal - oldVal
         this.loading = false
         this.hasPlayTime = this.hasPlayTime + (diff > 0 ? (diff > 0.02 ? 0.02 : diff) : 0)
-        this.canvasInstance.drawImage(this.videoInstance, 0, 0, 400, 200)
+        // this.canvasInstance.drawImage(this.videoInstance, 0, 0, 400, 200)
         // if (this.mergePicToVideo && this.picOption.editLogo) {
         //   this.canvasInstance.drawImage(this.picCanvas, 0, 0, 400, 200)
         // }
@@ -163,10 +180,11 @@ export default {
         this.currentIndex ++
         this.$nextTick(() => {
           // this.videoInit()
-          console.log('马上播放下一个', this.currentIndex)
-          this.videoInstance.src = this.playList[this.currentIndex].src
-          this.triggerPlay()
-          this.videoPreLoad()
+          console.log('this.playList[this.currentIndex].src', this.playList[this.currentIndex].src)
+          this.canvasNew.change(this.playList[this.currentIndex].src)
+          // this.videoInstance.src = this.playList[this.currentIndex].src
+          // this.triggerPlay()
+          // this.videoPreLoad()
         })
       } else {
         this.isPauseing = true
@@ -178,7 +196,8 @@ export default {
       console.log('能够播放了', this.currentIndex)
       this.playList[this.currentIndex].enoughToPlay = true
       this.loading = false
-      if (this.autoPlay) this.triggerPlay()
+      // if (this.autoPlay) this.triggerPlay()
+      if (this.autoPlay || this.currentIndex > 0) this.canvasNew.play()
     },
     // 视频Waiting监听回调
     videoWaitingHandle () {
@@ -199,7 +218,8 @@ export default {
     },
     videoInit () {
       const that = this
-      this.videoInstance = document.querySelector('video')
+      // this.videoInstance = document.getElementById('my-video')
+      console.log('this.videoInstance')
       if (!this.videoInstance) return
       this.videoInstance.src = this.playList[this.currentIndex].src
       if (this.audioSrc) { // 如果存在插入音频 视频的音量设置为零
@@ -244,25 +264,29 @@ export default {
     // 绘制首屏视频
     captureFisrt () {
       const that = this
+      console.log('获取第一帧')
       that.videoInstance.addEventListener('loadeddata', function callback () {
         if (that.videoInstance.readyState >= 2) {
-          that.canvasInstance.drawImage(that.videoInstance, 0, 0, 400, 200)
+          // that.canvasInstance.drawImage(that.videoInstance, 0, 0, 400, 200)
+          console.log(' that.canvasNew', that.canvasNew)
+          that.canvasNew.drawFrame()
           that.videoInstance.removeEventListener('loadeddata', callback)
         }
       })
     },
     // 播放或者暂停
     changeStatus () {
-      this.isPlaying = !this.isPlaying
-      this.showPlayingIcon = true
-      if (!this.isPlaying) {
-        this.isPauseing = true
-        if (this.audioSrc) {
-          this.audioInstance.pause()
-        }
-        this.videoInstance.pause()
-      }
-      this.triggerPlay()
+      // this.isPlaying = !this.isPlaying
+      // this.showPlayingIcon = true
+      // if (!this.isPlaying) {
+      //   this.isPauseing = true
+      //   if (this.audioSrc) {
+      //     this.audioInstance.pause()
+      //   }
+      //   this.videoInstance.pause()
+      // }
+      // this.triggerPlay()
+      this.canvasNew.play()
     },
     drawStart () {
       const that = this
