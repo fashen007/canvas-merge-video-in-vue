@@ -23,6 +23,7 @@ module.exports = {
         "x-invalid-end-tag": false
     }
     ],
+    "padded-blocks": 0,
     "no-unused-vars": 0,
     "no-extra-parens": 0,
     "camelcase": 0,

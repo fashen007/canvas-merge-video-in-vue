@@ -1,18 +1,16 @@
 <template>
   <div style='overflow: hidden; position: relative;'>
-    <video class="video" preload='auto' width="270" style='display: none' v-for="(video, index) in playList" :key='index'>
-      <source :src="video.src" type='video/mp4'>
-    </video>
     <div class='video-cont'>
-      <video class="video" :width="width" id='my-video' style="display: none" playsinline webkit-playsinline>
-        <source :src="playList[0] ? playList[0].src : ''" type='video/mp4'>
+      <video class="video" preload='auto' :width="width" :height="height" style='display: none; position:absolute; top: 0;left: 0' v-for="(video, index) in playList" :key='index' :id='`video-${index}`'>
+        <source :src="video.src" type='video/mp4' >
       </video>
-      <canvas controls id="myCanvas" width='400' height='200' style="border:1px solid #d3d3d3;">Your browser does not support the HTML5 canvas tag.</canvas>
+      <video :width="width" :height="height" :autoplay='autoPlay' id='my-video' playsinline webkit-playsinline style='position:relative; z-index:99' ></video>
+      <!-- <canvas controls id="myCanvas" width='400' height='200' style="border:1px solid #d3d3d3;">Your browser does not support the HTML5 canvas tag.</canvas> -->
       <div class='play-icon' :class='isPauseing ?   "is-pausing" : "is-playing"' @click="changeStatus">
         <i class='kz-icon-zanting' v-if='isPlaying && showPlayingIcon'></i>
         <i class='kz-icon-kaishi' v-else></i>
       </div>
-      <video-control v-if='showContr' :time='hasPlayTime' :endTime='endTime' @dragProgress='dragProgress' :showSounds='showSounds'></video-control>
+      <video-control v-if='showContr' :time='hasPlayTime' :endTime='endTime' @dragProgress='dragProgress' :showSounds='showSounds' style='z-index: 100'></video-control>
     </div>
     <audio :src="audioSrc" preload="auto" style='display: none' id='insertAudio'></audio>
 </div>
@@ -40,11 +38,11 @@ export default {
     },
     width: {
       type: Number,
-      default: 270
+      default: 400
     },
     height: {
       type: Number,
-      default: 0
+      default: 200
     },
     sounds: {
       type: Number,
@@ -64,7 +62,7 @@ export default {
     }
   },
   mounted () {
-    this.videoInstance = document.getElementById('my-video')
+    this.videoDom = document.getElementById('my-video')
     this.progressSetTimeout = null
     this.hasPlayTime = 0
     // this.cv = document.getElementById('myCanvas')
@@ -72,6 +70,7 @@ export default {
     this.imageInterval = null
   },
   data () {
+   
     return {
       isFullscreen: false, // 全屏
       hasPlayTime: 0, // 当前播放时长
@@ -86,7 +85,7 @@ export default {
       isPauseing: true, // 暂停状态
       audioPlaying: false, // 音频播放状态
       mutedable: false, // 是否静音
-      videoInstance: null, // 当前激活的视频实例
+      // videoInstance: null, // 当前激活的视频实例
       showPlayingIcon: false, // 是否展示播放按钮
       isPlaying: false // 播放状态
     }
@@ -101,19 +100,18 @@ export default {
     },
     playList: function (newVal, oldVal) {
       if (newVal.length && newVal != oldVal) {
-        this.playList.map((item) => {
+        newVal.map((item) => {
           this.endTime = this.endTime + item.duration
         })
-        // this.terminalTimeLabel = this.durationFormat((this.endTime)) // 格式化所有视频长度
-        this.currentVideoInstance = new VideoPlayer(this.videoInstance, null, {
-          end: this.videoEndedHandle,
-          canplay: this.videoCanplayHandle
-        })
         this.$nextTick(() => {
-          // console.log('执行了？')
-          // this.videoInit()
+         this.videoDom.src = newVal[0].src
+          this.currentVideoInstance = new VideoPlayer(this.videoDom, null, {
+            end: this.videoEndedHandle,
+            canplay: this.videoCanplayHandle,
+            play: this.videoPlayHandle,
+            timeupdate: this.timeupdate
+          })
           this.currentVideoInstance.load()
-          console.log('传值进去了呀')
         })
       }
     },
@@ -129,11 +127,6 @@ export default {
         let diff = newVal - oldVal
         this.loading = false
         this.hasPlayTime = this.hasPlayTime + (diff > 0 ? (diff > 0.02 ? 0.02 : diff) : 0)
-        // if (this.mergePicToVideo && this.picOption.editLogo) {
-        // }
-        that.progressSetTimeout = window.setTimeout(() => {
-          // that.currentTimeLabel = that.durationFormat(Math.floor(this.hasPlayTime))
-        }, 1000)  // 一秒钟更新一次
       }
     },
     // currentTimeLabel: function (newVal, oldVal) { // 用来触发声音
@@ -147,7 +140,7 @@ export default {
       if (this.audioSrc) { // 如果存在插入音频 视频的音量设置为零
         this.audioInstance.volume = newVal / 100
       } else {
-        this.videoInstance.volume = newVal / 100
+        // this.videoInstance.volume = newVal / 100
       }
     }
   },
@@ -169,6 +162,9 @@ export default {
         this.currentIndex ++
         this.$nextTick(() => {
           // this.videoInit()
+          let videoBackDom = document.getElementById('video-' + this.currentIndex)
+          videoBackDom.style.display = 'block'
+          videoBackDom.style.zIndex = '98'
           this.currentVideoInstance.change(this.playList[this.currentIndex].src)
         })
       } else {
@@ -178,15 +174,15 @@ export default {
     },
     // 视频canplay监听回调
     videoCanplayHandle () {
-      console.log('能够播放了', this.currentIndex)
       this.playList[this.currentIndex].enoughToPlay = true
       this.loading = false
-      // if (this.autoPlay) this.triggerPlay()
+      let videoBackDom = document.getElementById('video-' + this.currentIndex)
+      videoBackDom.style.display = 'none'
+      videoBackDom.style.zIndex = '0'
       if (this.autoPlay || this.currentIndex > 0) this.currentVideoInstance.play()
     },
     // 视频Waiting监听回调
     videoWaitingHandle () {
-      console.log('videoWaitingHandle')
       this.isPauseing = true
       this.loading = true
       this.currentEnoughToPlay = false
@@ -195,32 +191,17 @@ export default {
       }
     },
     videoInit () {
-      // const that = this
-      // // this.videoInstance = document.getElementById('my-video')
-      // console.log('this.videoInstance')
-      // if (!this.videoInstance) return
-      // this.videoInstance.src = this.playList[this.currentIndex].src
+      console.log('this.videoInstance')
+      if (!this.videoInstance) return
+      this.videoInstance.src = this.playList[this.currentIndex].src
       // if (this.audioSrc) { // 如果存在插入音频 视频的音量设置为零
-      //   this.videoInstance.muted = true
+        this.videoInstance.muted = true
       //   this.audioInstance.volume = this.sounds / 100
       //   this.mutedable = this.audioInstance.muted
       // } else {
       //   this.videoInstance.volume = this.sounds / 100
       //   this.mutedable = this.videoInstance.muted
       // }
-      // // 播放
-      // that.videoInstance.addEventListener('play', this.videoPlayHandle, false)
-      // // 暂停
-      // that.videoInstance.addEventListener('pause', this.videoPauseHandle, false)
-      // // 结束
-      // this.videoInstance.addEventListener('ended', this.videoEndedHandle, false)
-      // // 可以播放
-      // this.videoInstance.addEventListener('canplay', this.videoCanplayHandle, false)
-      // // waiting了
-      // this.videoInstance.addEventListener('waiting', this.videoWaitingHandle, false)
-      // 预先加载下一个视频碎片
-      // this.videoPreLoad()
-      // this.captureFisrt()
     },
     audioInit () {
       this.audioInstance = document.getElementById('insertAudio')
@@ -237,16 +218,6 @@ export default {
       // 暂停
       this.audioInstance.addEventListener('pause', audioPauseHandle, false)
     },
-    // 绘制首屏视频
-    captureFisrt () {
-      const that = this
-      that.videoInstance.addEventListener('loadeddata', function callback () {
-        if (that.videoInstance.readyState >= 2) {
-          that.currentVideoInstance.drawFrame()
-          that.videoInstance.removeEventListener('loadeddata', callback)
-        }
-      })
-    },
     // 播放或者暂停
     changeStatus () {
       this.currentVideoInstance.play()
@@ -256,13 +227,8 @@ export default {
       this.clearIntervaler()
       if (!drawTimerInterval) {
         drawTimerInterval = window.setInterval(() => {
-          this.currentTime = that.videoInstance.currentTime
+          that.currentTime = that.videoDom.currentTime
         }, 20)  // 每0.02秒画一张图片
-      }
-      if (!progressInterval) {
-        progressInterval = window.setInterval(() => {
-          that.progress = Math.floor(that.hasPlayTime)
-        }, 1000)  // 每1秒画统计一次时间条
       }
     },
     dragProgress (val) {
@@ -270,7 +236,7 @@ export default {
       // 拖拽了
       this.clearIntervaler()
       this.isPauseing = true
-      this.videoInstance.pause() // 当拖拽的是 视频应该暂停,不然声音还一直播放
+      this.currentVideoInstance.pause() // 当拖拽的是 视频应该暂停,不然声音还一直播放
       if (this.audioSrc) {
         this.audioInstance.pause() // 当拖拽的是 视频应该暂停,不然声音还一直播放
       }
@@ -281,10 +247,10 @@ export default {
           this.hasPlayTime = val
           if (this.currentIndex != i) { // 显示当前的video
             this.currentIndex = i
-            this.videoInstance.src = this.playList[this.currentIndex].src
+            this.currentVideoInstance.src = this.playList[this.currentIndex].src
             // this.videoInit() // 初始化video实例
           }
-          this.videoInstance.currentTime = val - item.position
+          this.currentVideoInstance.currentTime = val - item.position
         }
       })
       if (this.audioSrc) {
@@ -350,6 +316,7 @@ a {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  z-index: 100;
 }
 .play-icon i {
   font-size: 30px
@@ -360,6 +327,7 @@ a {
   width: 400px;
   height: 200px;
   overflow: hidden;
+  background: black;
 }
 .video-cont:hover .controls{
   display: block;
