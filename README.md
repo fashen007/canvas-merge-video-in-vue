@@ -1,3 +1,5 @@
+# 新项目推荐 https://github.com/spademan/seamlessCanvasPlayer 【播放器】
+
 # canvas-merge-video-in-vue
 
 ##[demo](https://spademan.github.io/canvas-merge-video-in-vue/#/)
