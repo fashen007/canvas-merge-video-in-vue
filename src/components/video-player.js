@@ -36,6 +36,9 @@ var videoPlayer = (function (window, document) {
     function loadedmetadata (e) {
       option['loadedmetadata'] && option['loadedmetadata'](e)
     }
+    function timeupdate (e) {
+      option['timeupdate'] && option['timeupdate'](e)
+    }
     newVideo.addEventListener('play', function() {
       if (canvas) drawCanvas();
     }, false);
@@ -44,6 +47,7 @@ var videoPlayer = (function (window, document) {
     newVideo.addEventListener('canplay', canplay, false);
     newVideo.addEventListener('play', play, false);
     newVideo.addEventListener('loadedmetadata', loadedmetadata, false);
+    newVideo.addEventListener('timeupdate', timeupdate, false);
     // newVideo.addEventListener('loadeddata', function callback () {
     //   newVideo.removeEventListener('loadeddata', callback)
     // })

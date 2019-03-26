@@ -1,6 +1,6 @@
 <template>
   <div style='overflow: hidden; position: relative;' @mouseenter='handleMouseenter' @mouseleave='handleMouseleave' v-loading="loading">
-    <video class="video" width="270" :src="video.src" style='display: none' controls :poster="poster" v-for="(video, index) in playList" :key='index' :id='`originVideo-${index}`' playsinline webkit-playsinline>
+    <video class="video" width="270" :src="video.src"  controls :poster="poster" v-for="(video, index) in playList" :key='index' :id='`originVideo-${index}`' playsinline webkit-playsinline>
     </video>
     <div class='video-cont'>
       <!-- <video class="video" :width="width" id='my-video' style="display: none" playsinline webkit-playsinline>
@@ -125,7 +125,6 @@ export default {
     currentTime: function (newVal, oldVal) {
       if ((newVal != oldVal) && !this.videoPauseing) {
         let diff = newVal - oldVal
-        console.log('diff', diff)
         this.hasPlayTime = this.hasPlayTime + (diff > 0 ? diff : 0)
       }
     },
@@ -144,6 +143,7 @@ export default {
               play:  (e) => this.videoPlayHandle(e, index),
               pause:  (e) => this.videoPauseHandle(e, index),
               seeked:  (e) => this.videoSeekedHandle(e, index),
+              timeupdate:  (e) => this.timeupdate(e, index)
             })
             this.currentIndex = 0
            })
@@ -173,7 +173,7 @@ export default {
       }
       this.isPauseing = false
       this.isPlaying = true
-      this.drawStart()
+      // this.drawStart()
       this.audioSrc && this.audioInstance.play()
     },
     // 视频pause监听回调
@@ -182,7 +182,10 @@ export default {
       this.isPlaying = false
     },
     videoSeekedHandle (e, index) {
-      console.log('获取完成')
+    },
+    timeupdate (e) {
+      let currentTime = e.target.currentTime
+      this.currentTime = currentTime
     },
     // 视频ended监听回调
     videoEndedHandle (e, index) {
@@ -304,19 +307,27 @@ export default {
       // 拖动进度条
       let timeLens = 0
       this.hasPlayTime = val
+      console.log('val', val)
+      for (let i = 0; i < this.playList.length; i++) {
+        // 判断当前滑点在哪个视频源上
+        console.log('this.playList[i].canvasInstance.videoDom.duration', this.playList[i].canvasInstance.videoDom.duration)
+      }
       for (let i = 0; i < this.playList.length; i++) {
          // 判断当前滑点在哪个视频源上
+        console.log('timeLens', timeLens)
+        timeLens = timeLens + this.playList[i].canvasInstance.videoDom.duration
         if (timeLens >= val) {
           this.currentIndex = i
-          this.currentVideo.currentTime = timeLens - val
+          let diff = timeLens - val
           // = timeLens - val
           this.$nextTick(() => {
-            this.currentVideo.videoDom.currentTime = this.currentVideo.videoDom.duration - this.currentVideo.currentTime
-            console.log('设置了吗？', 'this.hasPlayTime', this.hasPlayTime)
+            // let trueDiff = this.currentVideo.videoDom.duration - diff
+            // console.log('trueDiff', trueDiff)
+            this.currentVideo.videoDom.currentTime = diff
+            this.currentVideo.currentTime = diff
           })
           break
         }
-        timeLens = timeLens + this.playList[i].canvasInstance.videoDom.duration
       }
       if (this.audioSrc) {
         this.audioInstance.currentTime = this.hasPlayTime
