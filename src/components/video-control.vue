@@ -3,7 +3,7 @@
     <el-row :gutter="5" class='row'>
     <!-- <el-col :span="3"><div class="grid-content bg-purple"></div><el-button size="mini" @click.native='clickTrigger'>{{videoPauseing ? '开始': '暂停'}}</el-button></el-col> -->
     <el-col :span="7" class='time-duration'><div class="grid-content bg-purple">{{currentTimeLabel}}/{{terminalTimeLabel}}</div></el-col>
-    <el-col :span="8"><div class="grid-content bg-purple"><el-slider @change='progressDrag' v-model="progress" :max='endTime'></el-slider></div></el-col>
+    <el-col :span="8"><div class="grid-content bg-purple"><el-slider :step="0.01" @change='progressDrag' v-model="progress" :max='endTime' :format-tooltip="formatTooltip"></el-slider></div></el-col>
     <el-col :span="6">
       <div class="grid-content bg-purple">
       <span class='sound-contr' v-if='showSounds'> 
@@ -35,10 +35,13 @@
     watch: {
       time (val) {
         this.progress = val
-        this.currentTimeLabel = this.durationFormat(Math.floor(val))
+        // this.currentTimeLabel = this.durationFormat(Math.floor(val))
       },
       endTime (val) {
         this.terminalTimeLabel = this.durationFormat(val) // 格式化所有视频长度
+      },
+      progress (val) {
+        this.currentTimeLabel = this.durationFormat(Math.floor(val))
       }
     },
     methods: {
@@ -52,6 +55,9 @@
       },
       progressDrag (val) {
         this.$emit('dragProgress', val)
+      },
+      formatTooltip () {
+        return this.currentTimeLabel
       },
       triggerSound () {
         this.mutedable = !this.mutedable
