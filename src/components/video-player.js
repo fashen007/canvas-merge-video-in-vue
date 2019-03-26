@@ -1,9 +1,8 @@
 var videoPlayer = (function (window, document) {
-  function videoPlayer (videoElement, canvas, option) {
-    if (!videoElement) return
+  function videoPlayer (newVideo, canvas, option) {
+    if (!newVideo) return
     let self = this
     self.ctx = canvas ? canvas.getContext('2d') : null;
-    var newVideo = canvas ? videoElement.cloneNode(false) : videoElement;
     var timer = null;
     var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
                                 window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
@@ -14,7 +13,9 @@ var videoPlayer = (function (window, document) {
       self.ctx.drawImage(newVideo, 0, 0, canvas.width, canvas.height);
       timer = requestAnimationFrame(drawCanvas);
     }
-
+    function drawOneTime () {
+      self.ctx.drawImage(newVideo, 0, 0, canvas.width, canvas.height);
+    }
     function stopDrawing() {
       cancelAnimationFrame(timer);
     }
@@ -49,7 +50,6 @@ var videoPlayer = (function (window, document) {
     // newVideo.load()
   //   videoElement.parentNode.replaceChild(canvas, videoElement);
     this.play = function(callback) {
-      // newVideo.load()
       newVideo.play()
       callback && callback()
     };
@@ -77,6 +77,7 @@ var videoPlayer = (function (window, document) {
       newVideo.load()
     };
     this.drawFrame = drawCanvas;
+    this.drawOneTime = drawOneTime;
   }
 
   return videoPlayer;

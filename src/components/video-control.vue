@@ -85,7 +85,6 @@ li {
 a {
   color: #42b983;
 }
- 
  .controls{
    opacity: 0.8;
     background-color: #fff;
