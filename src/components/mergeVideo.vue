@@ -1,6 +1,6 @@
 <template>
   <div style='overflow: hidden; position: relative;' @mouseenter='handleMouseenter' @mouseleave='handleMouseleave' v-loading="loading">
-    <video class="video" width="270" :src="video.src"  controls :poster="poster" v-for="(video, index) in playList" :key='index' :id='`originVideo-${index}`' playsinline webkit-playsinline>
+    <video class="video" width="270" :src="video.src" style='display: none' controls :poster="poster" v-for="(video, index) in playList" :key='index' :id='`originVideo-${index}`' playsinline webkit-playsinline>
     </video>
     <div class='video-cont'>
       <!-- <video class="video" :width="width" id='my-video' style="display: none" playsinline webkit-playsinline>
